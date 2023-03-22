@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AccountUserEntity } from './modules/account-users/accountUser.entity';
-import { AccountUserlModule } from './modules/account-users/accountUser.module';
+import { AccountUserModule } from './modules/account-users/accountUser.module';
 import { InformationUserEntity } from './modules/infor-users/inforUser.entity';
 import { ProfileUserEntity } from './modules/profile-users/profileUser.entity';
 
@@ -16,9 +16,9 @@ import { ProfileUserEntity } from './modules/profile-users/profileUser.entity';
         username: 'root',
         password: null,
         database: 'freelancerproject-user',
-        entities: [InformationUserEntity, AccountUserEntity, ProfileUserEntity],
-        synchronize: true, // fix: false -> migration
-      })],
+        entities: [ AccountUserEntity], //InformationUserEntity, ProfileUserEntity
+        synchronize: false, // fix: false -> migration
+      }), AccountUserModule],
   controllers: [AppController],
   providers: [AppService,],
 })
