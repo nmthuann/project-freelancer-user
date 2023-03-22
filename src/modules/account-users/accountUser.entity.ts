@@ -1,5 +1,5 @@
 import { BaseEntity } from "src/common/bases/base.entity"
-import { Entity,  Column, CreateDateColumn, DeepPartial, PrimaryColumn } from "typeorm"
+import { Entity,  Column, CreateDateColumn, DeepPartial, PrimaryColumn, BeforeInsert } from "typeorm"
 
 @Entity({name:'AccountUsers'})
 export class AccountUserEntity extends BaseEntity { 
@@ -11,5 +11,10 @@ export class AccountUserEntity extends BaseEntity {
 
     @Column({ default: 'active' })
     status: string;
+
+    @BeforeInsert()
+    emailToLowerCase(){
+        this.email = this.email.toLowerCase();
+    }
 
 }
