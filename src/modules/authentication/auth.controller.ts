@@ -1,31 +1,33 @@
-import { Body, Controller, HttpException, HttpStatus, Post, UseGuards, Request, Get, Param } from '@nestjs/common';
+import { Body, Controller, HttpException, HttpStatus, 
+  Post, UseGuards, Request, Get, Param, UsePipes } from '@nestjs/common';
 import { AccountUserService } from '../account-users/accountUser.service';
 import { AuthService } from './auth.service';
 import { AccountUserDto } from '../account-users/accountUser.dto';
 import { CreateAccountUserDto } from '../account-users/create-accountUser.dto';
 import { LocalAuthGuard } from 'src/guards/auth.guard';
 import { AuthenticationGuard } from 'src/guards/local.guard';
+import { ValidatorPipe } from 'src/pipes/validator.pipe';
 
-@Controller()
+/**
+ * Authentication/ 
+ * 1. Register
+ * 2. Login
+ */
+
+@Controller('auth')
 export class AuthController {
   constructor(
-    private accountUserService: AccountUserService,
+    //private accountUserService: AccountUserService,
     private authService: AuthService,
   ) {}
 
  //fucntion register user
   @Post('/register')
-  async registerUser(@Body() input: CreateAccountUserDto) {
-    const check = await this.validate(input.email);
-    if (!check) {
-      throw new HttpException(
-        { message: 'User already exists' },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    input.password = await this.authService.hashPassword(input.password);
-    return this.accountUserService.create(input);
+  @UsePipes(new ValidatorPipe())
+  async registerUser(@Body() input: CreateAccountUserDto): Promise<any> {
+    // check mail
+    return this.authService.registerUser(input)
+    
   }
   
   //handle login
@@ -35,6 +37,29 @@ export class AuthController {
     return this.authService.login(request.user);
   }
   
+  @Post('/logout')
+  logout(){
+    this.authService.logout();
+  }
+
+  @Post('/refresh')
+  refreshTokens(){
+    this.authService.refreshTokens( )
+  }  
+  
+
+  
+  //check user exists by email
+  // async validateEmail(email: string) {
+  //   try {
+  //     const findUserByEmail = await this.accountUserService.getUserByEmail(email);
+  //     return true;
+  //   } catch (e) {
+  //     return false;
+  //   }
+  // }
+}
+
 //   @UseGuards(AuthenticationGuard)
 //   @Get('users/:id')
 //     async getUserById(@Param() params): Promise<AccountUserEntity> {
@@ -42,14 +67,3 @@ export class AuthController {
 //         this.throwUserNotFound(user);
 //         return user;
 //      }
-   
-  //check user exists by email
-  async validate(email: string) {
-    try {
-      const users = await this.accountUserService.getUserByEmail(email);
-      return "test???"
-    } catch (e) {
-      return false;
-    }
-  }
-}
