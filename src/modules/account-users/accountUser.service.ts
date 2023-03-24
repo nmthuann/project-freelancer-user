@@ -1,37 +1,47 @@
-import { HttpException, HttpStatus, UnauthorizedException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { from, map, Observable, switchMap } from "rxjs";
-// import { Observable } from "rxjs";
-import { Repository } from "typeorm";
-import { AuthService } from "../authentication/auth.service";
-//import { LocalStrategy } from "../authentication/local.strategy";
-import { AccountUserDto } from "./accountUser.dto";
+import { DeleteResult, Repository } from "typeorm";
 import { AccountUserEntity } from "./accountUser.entity";
 import { CreateAccountUserDto } from "./create-accountUser.dto";
 
-import { LoginUserDto } from "./login-accountUser.dto";
-import bcrypt from 'bcrypt';
-
+@Injectable()
 export class AccountUserService{
-    constructor(
+  constructor(
     @InjectRepository(AccountUserEntity)
-        private accountUserRepository: Repository<AccountUserEntity>,
-       // private authService: AuthService,
-       //private local: LocalStrategy
+      private accountUserRepository: Repository<AccountUserEntity>,
     ) {}
 
-
-        async create(inputs: CreateAccountUserDto): Promise<AccountUserEntity> {
-          // nếu đang thắc mắc là trên userRepository không có function createEntity?
-          // đừng lo vì nó đã được mình định nghĩa trong modelRepository rồi 
+    // Tạo Account
+    async createAccountUser(inputs: CreateAccountUserDto): Promise<AccountUserEntity> {
           return await this.accountUserRepository.create(inputs);
-        }
-        
-        async getUserByEmail(email: string): Promise<AccountUserEntity> {
+    }
+  
+    // FindUserByEmail
+    async getUserByEmail(email: string): Promise<AccountUserEntity> {
           return await this.accountUserRepository.findOneBy({
                 email: email
             });
-        }
+    }
+
+    // Cập nhật pass
+    async updateAccountUserByPassword(){
+
+    }
+
+    // delete Account: set status: active => off
+    async offAccountUser(email: string){
+      const userByEmail = await this.getUserByEmail(email);
+      userByEmail.status = 'off';
+      await this.accountUserRepository.save(userByEmail);
+    }
+
+    async deleteAccountUserByEmail(email : string): Promise<DeleteResult> {
+        // const deleted = 
+        // console.log(deleted)
+        return this.accountUserRepository.softDelete(email);
+    }
+}
+
 
 //Obvervabale
     // createAccountUser(createdUserDto: CreateAccountUserDto): Promise<AccountUserDto | undefined>{ // 
@@ -119,4 +129,3 @@ export class AccountUserService{
     //     })
     //     )
     // }
-}

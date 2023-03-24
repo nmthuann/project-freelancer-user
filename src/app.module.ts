@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AccountUserEntity } from './modules/account-users/accountUser.entity';
 import { AccountUserModule } from './modules/account-users/accountUser.module';
+import { AuthModule } from './modules/authentication/auth.module';
 import { InformationUserEntity } from './modules/infor-users/inforUser.entity';
 import { ProfileUserEntity } from './modules/profile-users/profileUser.entity';
 
@@ -16,9 +17,9 @@ import { ProfileUserEntity } from './modules/profile-users/profileUser.entity';
         username: 'root',
         password: null,
         database: 'freelancerproject-user',
-        entities: [ AccountUserEntity], //InformationUserEntity, ProfileUserEntity
+        entities: [AccountUserEntity], //InformationUserEntity, ProfileUserEntity
         synchronize: false, // fix: false -> migration
-      }), AccountUserModule],
+      }),  AuthModule],
   controllers: [AppController],
   providers: [AppService,],
 })
