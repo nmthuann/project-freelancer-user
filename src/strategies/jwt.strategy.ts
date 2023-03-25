@@ -15,6 +15,7 @@ export class JsonWebTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
       }
 
       validate(payload: AuthPayload) {
+        console.log('validate()', payload);
         return { email: payload.email };
       } 
     }
