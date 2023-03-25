@@ -7,6 +7,7 @@ import { CreateAccountUserDto } from '../account-users/create-accountUser.dto';
 import { LocalAuthGuard } from 'src/guards/auth.guard';
 import { AuthenticationGuard } from 'src/guards/local.guard';
 import { ValidatorPipe } from 'src/pipes/validator.pipe';
+import { LoginUserDto } from '../account-users/login-accountUser.dto';
 
 /**
  * Authentication/ 
@@ -31,10 +32,11 @@ export class AuthController {
   }
   
   //handle login
-  @UseGuards(LocalAuthGuard)
+  //@UseGuards(AuthenticationGuard)
   @Post('/login')
-  async login(@Request() request): Promise<any> {
-    return this.authService.login(request.user);
+  @UsePipes(new ValidatorPipe())
+  async login(@Body() loginDto: LoginUserDto): Promise<any> {
+    return this.authService.login(loginDto);
   }
   
   @Post('/logout')
@@ -48,7 +50,10 @@ export class AuthController {
   }  
   
 
-  
+  @Post()
+  forgetPassword(){
+    return this.authService.forgetPassword();
+  }
   //check user exists by email
   // async validateEmail(email: string) {
   //   try {
