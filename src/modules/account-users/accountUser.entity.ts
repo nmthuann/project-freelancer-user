@@ -12,9 +12,14 @@ export class AccountUserEntity extends BaseEntity {
     @Column({ default: 'active' })
     status: string;
 
+    @Column()
+    refresh_token: string;
+
+    @Column({ default: 'user' })
+    role: string
+
     @BeforeInsert()
     emailToLowerCase(){
         this.email = this.email.toLowerCase();
-    }
-
+    } 
 }

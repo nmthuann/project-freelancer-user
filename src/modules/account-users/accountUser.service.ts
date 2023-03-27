@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { DeleteResult, Repository } from "typeorm";
 import { AccountUserEntity } from "./accountUser.entity";
 import { CreateAccountUserDto } from "./create-accountUser.dto";
+import { UpdateAccountUserDto } from "./update-account.dto";
 
 @Injectable()
 export class AccountUserService{
@@ -23,9 +24,16 @@ export class AccountUserService{
             });
     }
 
-    // Cập nhật pass
-    async updateAccountUserByPassword(){
+    // Cập nhật Account
+    async updateAccountUser(email: string, accountDto: CreateAccountUserDto){
+      const userByEmail = await this.getUserByEmail(email);
+      return await this.accountUserRepository.save({...userByEmail, ...accountDto});
+    }
 
+    // Cập nhật Account
+    async updateRefreshToken(email: string, accountDto: UpdateAccountUserDto){
+      const userByEmail = await this.getUserByEmail(email);
+      return await this.accountUserRepository.save({...userByEmail, ...accountDto});
     }
 
     // delete Account: set status: active => off

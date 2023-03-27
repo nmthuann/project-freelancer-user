@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ForbiddenException, HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
 // import { from, Observable } from "rxjs";
 // import { Repository } from "typeorm";
 // import { AccountUserDto } from "../account-users/accountUser.dto";
@@ -11,16 +11,21 @@ import { LoginUserDto } from "../account-users/login-accountUser.dto";
 import { CreateAccountUserDto } from "../account-users/create-accountUser.dto";
 import { NextFunction, Request, Response } from "express";
 import * as dotenv from 'dotenv';
+import { RefreshJWTStrategy } from "src/strategies/refresh.strategy";
+import { UpdateAccountUserDto } from "../account-users/update-account.dto";
 dotenv.config();
 
 @Injectable()
 export class AuthService {
-
+  
   constructor(
     private jwtService: JwtService,
     private accountUserService: AccountUserService,
-  ) { }
-
+  ) { 
+    
+  }
+  private refresh_Token_list: string []; // database!
+  
   //function hash password
   async hashPassword(password: string): Promise<string> {
     //console.log(await bcrypt.hash(password, 10))
@@ -59,24 +64,17 @@ export class AuthService {
       },
         {
           secret: 'REFRESH_JWT_SECRET_KEY',
-          expiresIn: 60 * 15,
+          //expiresIn: 60 * 15,
         })
     ]);
-
-    // const accessToken = this.jwtService.signAsync({
-    //   email,
-    // },
-    // {
-    //   secret: 'JWT_SECRET_KEY',
-    //   expiresIn: 60 * 15,
-    // });
-
+    this.refresh_Token_list.push(refresh);
     return {
       access_token: jwt,
       refresh_token: refresh
     }
   }
 
+  // đăng kí tài khoản
   async registerUser(input: CreateAccountUserDto) {
     const checkUser = await this.accountUserService.getUserByEmail(input.email);
     if (checkUser) {
@@ -95,6 +93,7 @@ export class AuthService {
     return token;
   }
 
+  // đăng nhập
   async login(input: LoginUserDto) {
     console.log('value of input', input);
     const checkUser = await this.accountUserService.getUserByEmail(input.email);
@@ -115,33 +114,74 @@ export class AuthService {
     const payload: AuthPayload = {
       email: input.email,
     };
-    return { access_token: this.jwtService.sign(payload) };
+    // return { access_token: this.jwtService.sign(payload) };
+    const token = await this.getTokens(payload.email);
+    return token;
   }
 
-  logout() {
-
+   async logout(email: string): Promise<boolean> {
+    const checkUser = await this.accountUserService.getUserByEmail(email);
+    await this.updateRefreshToken(checkUser.email, null); //???
+    return true;
   }
 
-  refreshTokens() {
-
+  async refreshToken_1(req: Request, res: Response, next: NextFunction) {
+    const refresh_token_check = req.body.token;
+    if (!refresh_token_check) 
+      res.sendStatus(401); // Unauthorize
+    if(!this.refresh_Token_list.includes(refresh_token_check))
+      res.sendStatus(403); // forbidden
+    const author = await this.jwtService.verifyAsync(refresh_token_check);
+    if (!author) {
+      console.log("Loi author!");
+      res.status(403);
+    }else{
+      console.log("Phan quyen thanh cong!"); 
+      //const access_token = this.jwtService.signAsync(email)
+      next();
+    }
   }
 
-  forgetPassword() {
-    throw new Error('Method not implemented.');
+  async refreshToken_2(email: string, rt: string): Promise<any> {
+    const checkUser = await this.accountUserService.getUserByEmail(email);
+    if (!checkUser || !checkUser.refresh_token) throw new ForbiddenException('Access Denied');
+
+    const refreshMatches = this.jwtService.verifyAsync(checkUser.refresh_token);
+    if (!refreshMatches) throw new ForbiddenException('Access Denied');
+
+    const tokens = await this.getTokens(checkUser.email);
+    await this.updateRefreshToken(checkUser.email, tokens.refresh_token);
+
+    return tokens;
   }
 
-
-  // function Middleware
+  // function Middleware -> sẽ nằm ở API GateWay
   async authenToken(req: Request, res: Response, next: NextFunction) {
     //const authorizationHeader = req.headers['authorization'];
     const token = req.get('authorization').replace('Bearer', '').trim();
     console.log(token)
     if (!token) res.sendStatus(401);
     const author = await this.jwtService.verifyAsync(token);
-    if (author) {
-      console.log("Loi author")
+    if (!author) {
+      console.log("Loi author!");
       res.status(403);
+    }else{
+      console.log("Phan quyen thanh cong!"); 
       next();
     }
+  }
+
+  // update Refresh token
+  async updateRefreshToken(email: string, refresh: string){
+    // refresh -> hash????
+    const updateUserDto = new UpdateAccountUserDto();
+    updateUserDto.email = email;
+    updateUserDto.refresh_token = refresh;
+    await this.accountUserService.updateRefreshToken(email, updateUserDto);
+  }
+
+
+  forgetPassword() {
+    throw new Error('Method not implemented.');
   }
 }
