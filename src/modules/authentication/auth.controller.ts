@@ -1,5 +1,5 @@
 import { Body, Controller, HttpException, HttpStatus, 
-  Post, UseGuards, Request, Get, Param, UsePipes } from '@nestjs/common';
+  Post, UseGuards, Request, Get, Param, UsePipes, HttpCode } from '@nestjs/common';
 import { AccountUserService } from '../account-users/accountUser.service';
 import { AuthService } from './auth.service';
 import { AccountUserDto } from '../account-users/accountUser.dto';
@@ -8,6 +8,7 @@ import { LocalAuthGuard } from 'src/guards/auth.guard';
 import { AuthenticationGuard } from 'src/guards/local.guard';
 import { ValidatorPipe } from 'src/pipes/validator.pipe';
 import { LoginUserDto } from '../account-users/login-accountUser.dto';
+import { RefreshGuard } from 'src/guards/refresh.guard';
 
 /**
  * Authentication/ 
@@ -40,13 +41,20 @@ export class AuthController {
   }
   
   @Post('/logout')
-  logout(){
-    this.authService.logout();
+  @HttpCode(HttpStatus.OK)
+  logout(@Param() email: string){
+    this.authService.logout(email);
   }
 
-  @Post('/refresh')
-  refreshTokens(){
-    this.authService.refreshTokens( )
+  //@Public()
+  @UseGuards(RefreshGuard)
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  refreshToken(
+    @Param() email: string,
+    @Request() refreshToken: string,
+  ){
+    this.authService.refreshToken_2(email, refreshToken);
   }  
   
 
