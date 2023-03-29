@@ -4,5 +4,8 @@ export class UpdateAccountUserDto {
     @IsEmail()
     email: string;
 
+    @IsNotEmpty()
+    password: string
+
     refresh_token: string;
 }

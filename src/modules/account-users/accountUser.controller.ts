@@ -6,6 +6,9 @@ import { LoginUserDto } from "./login-accountUser.dto";
 import { CreateAccountUserDto } from "./create-accountUser.dto";
 import { ValidatorPipe } from "src/pipes/validator.pipe";
 import { AuthService } from "../authentication/auth.service";
+import { Roles } from "src/common/decorators/roles.decorator";
+import { Role } from "src/common/enums/role.enum";
+import { TransformPipe } from "src/pipes/transform.pipe";
 
 @Controller('users')
 export class AccountUserController{
@@ -13,9 +16,13 @@ export class AccountUserController{
         private authService: AuthService) {}
     // Rest Call: POST http://localhost:8080/api/users/
 
+    // tạo tài khỏa
     @Post()
-    @UsePipes(new ValidatorPipe())
-    // đăng kí
+    
+    @Roles(Role.Admin)
+    //  @RequirePermissions()
+    @UsePipes(new ValidatorPipe(), new TransformPipe())
+    //@UsePipes(new TransformPipe())
     create(@Body() createdUserDto: CreateAccountUserDto) {  
         return this.accountUserService.createAccountUser(createdUserDto);
     }

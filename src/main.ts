@@ -6,8 +6,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api'); // tiền tố api
   //app.useGlobalPipes(new ValidationPipe());
-  console.log('UserModule, here')
-  await app.listen(3000, () => (console.log(':localhost:3000')));
+  console.log('UserModule connect successfully!, ... here')
+  await app.listen(3000, () => (console.log('http://localhost:3000')));
   }
   
 bootstrap();
