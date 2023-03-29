@@ -18,8 +18,8 @@ import { ProfileUserEntity } from './modules/profile-users/profileUser.entity';
         password: null,
         database: 'freelancerproject-user',
         entities: [AccountUserEntity], //InformationUserEntity, ProfileUserEntity
-        synchronize: false, // fix: false -> migration
-      }),  AuthModule],
+        synchronize: false // fix: false -> migration
+      }),  AuthModule, ],
   controllers: [AppController],
   providers: [AppService,],
 })

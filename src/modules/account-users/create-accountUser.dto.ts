@@ -14,4 +14,5 @@ export class CreateAccountUserDto { //extends LoginUserDto
 
     @IsNotEmpty()
     password: string;
+
 }

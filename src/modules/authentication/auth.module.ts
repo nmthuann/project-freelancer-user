@@ -13,6 +13,7 @@ import { JsonWebTokenStrategy } from 'src/strategies/jwt.strategy';
 import { RefreshJWTStrategy } from 'src/strategies/refresh.strategy';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountUserEntity } from '../account-users/accountUser.entity';
+import { AuthenticationGuard } from 'src/guards/authentication.guard';
 
 @Module({
       imports: [
@@ -25,6 +26,6 @@ import { AccountUserEntity } from '../account-users/accountUser.entity';
       ],
       controllers: [AuthController],
       providers: [AuthService, AccountUserService,
-         JsonWebTokenStrategy, RefreshJWTStrategy]//LocalStrategy,
+         JsonWebTokenStrategy, RefreshJWTStrategy, AuthenticationGuard]//LocalStrategy,
     })
 export class AuthModule {}

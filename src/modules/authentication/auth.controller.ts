@@ -1,19 +1,27 @@
 import { Body, Controller, HttpException, HttpStatus, 
-  Post, UseGuards, Request, Get, Param, UsePipes, HttpCode } from '@nestjs/common';
-import { AccountUserService } from '../account-users/accountUser.service';
+  Post, UseGuards, Request, Get, Param, UsePipes,
+   HttpCode, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AccountUserDto } from '../account-users/accountUser.dto';
 import { CreateAccountUserDto } from '../account-users/create-accountUser.dto';
-import { LocalAuthGuard } from 'src/guards/auth.guard';
-import { AuthenticationGuard } from 'src/guards/local.guard';
+import { LocalAuthGuard } from 'src/guards/local.guard';
+import { AuthenticationGuard } from 'src/guards/authentication.guard';
 import { ValidatorPipe } from 'src/pipes/validator.pipe';
 import { LoginUserDto } from '../account-users/login-accountUser.dto';
 import { RefreshGuard } from 'src/guards/refresh.guard';
+import { AuthGuard } from '@nestjs/passport';
+import { Tokens } from '../../common/types/token.type';
+import { GetCurrentUser } from 'src/common/decorators/get-currentUser.decorator';
+import { Public } from 'src/common/decorators/public.decorator';
+import { TransformPipe } from 'src/pipes/transform.pipe';
+import { GetCurrentEmailUser } from 'src/common/decorators/get-currentEmailUser.decorator';
 
 /**
  * Authentication/ 
  * 1. Register
  * 2. Login
+ * 3. Logout
+ * 4. refresh
+ * 5. forgetPassword
  */
 
 @Controller('auth')
@@ -24,59 +32,43 @@ export class AuthController {
   ) {}
 
  //fucntion register user
-  @Post('/register')
-  @UsePipes(new ValidatorPipe())
-  async registerUser(@Body() input: CreateAccountUserDto): Promise<any> {
-    // check mail
-    return this.authService.registerUser(input)
-    
+ 
+  @Public()
+  @Post('register')
+  @UsePipes(new TransformPipe())
+  @HttpCode(HttpStatus.CREATED)
+  async registerUser(@Body() input: CreateAccountUserDto): Promise<Tokens> {
+    return await this.authService.registerUser(input);
   }
   
   //handle login
   //@UseGuards(AuthenticationGuard)
-  @Post('/login')
+  @Post('login')
   @UsePipes(new ValidatorPipe())
-  async login(@Body() loginDto: LoginUserDto): Promise<any> {
-    return this.authService.login(loginDto);
-  }
-  
-  @Post('/logout')
-  @HttpCode(HttpStatus.OK)
-  logout(@Param() email: string){
-    this.authService.logout(email);
+  async login(@Body() loginDto: LoginUserDto): Promise<Tokens> {
+    return await this.authService.login(loginDto);
   }
 
-  //@Public()
+  @UseGuards(AuthGuard('jwt'))
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(@GetCurrentEmailUser() email: string): Promise<boolean>{
+    return await this.authService.logout(email);
+  }
+
+  @Public()
   @UseGuards(RefreshGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   refreshToken(
-    @Param() email: string,
-    @Request() refreshToken: string,
+    @GetCurrentEmailUser() email: string,
+    @GetCurrentUser('refreshToken') refreshToken: string,
   ){
-    this.authService.refreshToken_2(email, refreshToken);
+    this.authService.refreshToken(email, refreshToken);
   }  
   
-
   @Post()
   forgetPassword(){
     return this.authService.forgetPassword();
   }
-  //check user exists by email
-  // async validateEmail(email: string) {
-  //   try {
-  //     const findUserByEmail = await this.accountUserService.getUserByEmail(email);
-  //     return true;
-  //   } catch (e) {
-  //     return false;
-  //   }
-  // }
 }
-
-//   @UseGuards(AuthenticationGuard)
-//   @Get('users/:id')
-//     async getUserById(@Param() params): Promise<AccountUserEntity> {
-//         const user = await this.accountUserService.findById(params.id);
-//         this.throwUserNotFound(user);
-//         return user;
-//      }
