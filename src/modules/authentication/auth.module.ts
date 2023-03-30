@@ -14,6 +14,9 @@ import { RefreshJWTStrategy } from 'src/strategies/refresh.strategy';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountUserEntity } from '../account-users/accountUser.entity';
 import { AuthenticationGuard } from 'src/guards/authentication.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { RefreshGuard } from 'src/guards/refresh.guard';
 
 @Module({
       imports: [
@@ -21,11 +24,24 @@ import { AuthenticationGuard } from 'src/guards/authentication.guard';
         JwtModule.register({
           secret: 'JWT_SECRET_KEY',
           signOptions: { expiresIn: 60},
-       }),PassportModule,
-       TypeOrmModule.forFeature([AccountUserEntity])
+        }),PassportModule,
+        TypeOrmModule.forFeature([AccountUserEntity])
       ],
       controllers: [AuthController],
       providers: [AuthService, AccountUserService,
-         JsonWebTokenStrategy, RefreshJWTStrategy, AuthenticationGuard]//LocalStrategy,
-    })
+        JsonWebTokenStrategy, RefreshJWTStrategy, 
+        AuthenticationGuard,
+        {
+          provide: APP_GUARD,
+          useClass: RolesGuard,
+        }, 
+      ]
+})
 export class AuthModule {}
+//AuthenticationGuard, RefreshGuard,
+//LocalStrategy,
+
+//  {
+//           provide: APP_GUARD,
+//           useClass: RolesGuard,
+//         },

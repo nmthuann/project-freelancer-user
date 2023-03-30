@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthenticationGuard } from './guards/authentication.guard';
+import { RolesGuard } from './guards/roles.guard';
 import { AccountUserEntity } from './modules/account-users/accountUser.entity';
 import { AccountUserModule } from './modules/account-users/accountUser.module';
 import { AuthModule } from './modules/authentication/auth.module';
@@ -18,10 +21,15 @@ import { ProfileUserEntity } from './modules/profile-users/profileUser.entity';
         password: null,
         database: 'freelancerproject-user',
         entities: [AccountUserEntity], //InformationUserEntity, ProfileUserEntity
-        synchronize: false // fix: false -> migration
+        synchronize: false// fix: false -> migration
       }),  AuthModule, ],
   controllers: [AppController],
-  providers: [AppService,],
+  providers: [AppService,
+  // {
+  //   provide: APP_GUARD,
+  //   useClass: RolesGuard,
+  // },
+],
 })
 
 export class AppModule  {// implements NestModule
@@ -36,3 +44,8 @@ export class AppModule  {// implements NestModule
   // }
 
 }
+
+// {
+//       provide: APP_GUARD,
+//       useClass: AuthenticationGuard,
+//     },

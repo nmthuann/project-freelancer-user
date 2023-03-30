@@ -13,6 +13,8 @@ import { NextFunction, Request, Response } from "express";
 import * as dotenv from 'dotenv';
 import { RefreshJWTStrategy } from "src/strategies/refresh.strategy";
 import { UpdateAccountUserDto } from "../account-users/update-account.dto";
+import { Tokens } from "src/common/types/token.type";
+import { Payload } from "src/common/types/payload.type";
 dotenv.config();
 
 /**
@@ -77,17 +79,17 @@ export class AuthService {
   }
 
   // gettoken -> [access,refresh]
-  async getTokens(email: string): Promise<any> {
+  async getTokens(payload: Payload): Promise<any> {
     const [jwt, refresh] = await Promise.all([
       this.jwtService.signAsync({
-        email,
+        payload
       },
         {
           secret: 'JWT_SECRET_KEY',
           expiresIn: 60 * 15,
         }),
       this.jwtService.signAsync({
-        email,
+        payload
       },
         {
           secret: 'REFRESH_JWT_SECRET_KEY',
@@ -131,7 +133,7 @@ export class AuthService {
     input.password = await bcrypt.hash(input.password, 12);
     console.log("test input.password(hash): ", input.password);
     const newUser = await this.accountUserService.createAccountUser(input);
-    const tokens = await this.getTokens(newUser.email);
+    const tokens = await this.getTokens({email: newUser.email, role: newUser.role});
     console.log("refresh chua update: ",newUser.refresh_token);
     const update = new UpdateAccountUserDto()
     update.email = newUser.email;
@@ -144,12 +146,12 @@ export class AuthService {
 
   // đăng nhập 
   async login(input: LoginUserDto) {
-    console.log('value of input', input);
+    console.log('value of input: ', input);
     const checkUser = await this.accountUserService.getUserByEmail(input.email);
-    console.log('value of checkUser', checkUser);
+    console.log('value of checkUser: ', checkUser);
     if (checkUser) {
       const checkPass = await this.comparePassword(input.password, checkUser.password);
-      console.log('value checkpass', checkPass);
+      console.log('value checkpass: ', checkPass);
       if (!checkPass) {
         throw new HttpException(
           { message: 'password wrong' },
@@ -160,11 +162,13 @@ export class AuthService {
       throw new UnauthorizedException('Credentials incorrect');
     }
 
-    const payload: AuthPayload = {
+    const payload: Payload = {
       email: input.email,
+      role: checkUser.role
     };
     // return { access_token: this.jwtService.sign(payload) };
-    const tokens = await this.getTokens(payload.email);
+    //const tokens = await this.getTokens(payload.email);
+    const tokens = await this.getTokens(payload);
     await this.updateRefreshToken(checkUser.email, tokens.refresh_token);
     return tokens;
   }
@@ -195,20 +199,31 @@ export class AuthService {
   // }
 
   // re
-  async refreshToken(email: string, rt: string): Promise<any> {
+  async refreshToken(email: string, rt: string): Promise<Tokens> {
+     console.log({
+      email,
+      rt
+    });
     const checkUser = await this.accountUserService.getUserByEmail(email);
-    console.log(checkUser);
+    //console.log(checkUser);
     if (!checkUser || !checkUser.refresh_token) throw new ForbiddenException('Access Denied');
 
-    const refreshMatches = this.jwtService.verifyAsync(checkUser.refresh_token);
+    const test = 'REFRESH_JWT_SECRET_KEY';//process.env.REFRESH_SECRET
+    const refreshMatches = await this.jwtService.decode(rt);
+    console.log("refreshToken func, refreshMatches: ", refreshMatches);
     if (!refreshMatches) throw new ForbiddenException('Access Denied');
 
-    const tokens = await this.getTokens(checkUser.email);
+    const tokens = await this.getTokens({email: checkUser.email, role: checkUser.role});
     await this.updateRefreshToken(checkUser.email, tokens.refresh_token);
+    console.log("refreshToken func, tokens ", tokens);
     return tokens;
   }
 
   forgetPassword() {
     throw new Error('Method not implemented.');
+  }
+
+  async ShowAccountList(){
+    return await this.accountUserService.getAccountUsers();
   }
 }

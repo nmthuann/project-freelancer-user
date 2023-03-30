@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { AuthPayload } from 'src/modules/authentication/auth.payload.interface';
 import { Strategy, ExtractJwt  } from 'passport-jwt';
+import { Payload } from 'src/common/types/payload.type';
 
 
 @Injectable()
@@ -14,8 +15,10 @@ export class JsonWebTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
         });
       }
 
-      validate(payload: AuthPayload) {
-        console.log('validate()', payload);
-        return { email: payload.email };
+      validate(payload: Payload) {
+        console.log('validate - JsonWebTokenStrategy: ', payload);
+        return payload ;
       } 
     }
+// { email: payload.email, 
+//           role: payload.role }
