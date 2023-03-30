@@ -1,12 +1,13 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Payload } from '../types/payload.type';
 
-export const GetCurrentEmailUser = createParamDecorator (
+export const GetCurrentRoleUser = createParamDecorator (
   (_: undefined, context: ExecutionContext): string => {
     const request = context.switchToHttp().getRequest();
-    console.log('(GetCurrentEmailUser) check request: ', request.user['email'])
+    console.log('(GetCurrentRoleUser) check request: ', request.user)
+    console.log('(GetCurrentRoleUser) check request: ', request.user['payload'].role)
     //const user = request.user as Payload;
-    const email = request.user['payload'].email;
-    return  email;
+    const role = request.user['payload'].role;
+    return role;
   },
 );

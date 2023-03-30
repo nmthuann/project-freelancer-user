@@ -14,6 +14,11 @@ import { GetCurrentUser } from 'src/common/decorators/get-currentUser.decorator'
 import { Public } from 'src/common/decorators/public.decorator';
 import { TransformPipe } from 'src/pipes/transform.pipe';
 import { GetCurrentEmailUser } from 'src/common/decorators/get-currentEmailUser.decorator';
+import { Role } from 'src/common/enums/role.enum';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { Payload } from 'src/common/types/payload.type';
+import { GetCurrentRoleUser } from 'src/common/decorators/get-currentRoleUser.decorator';
 
 /**
  * Authentication/ 
@@ -42,14 +47,15 @@ export class AuthController {
   }
   
   //handle login
-  //@UseGuards(AuthenticationGuard)
+  @Public()
   @Post('login')
   @UsePipes(new ValidatorPipe())
   async login(@Body() loginDto: LoginUserDto): Promise<Tokens> {
+    console.log(loginDto, "Đã vừa đăng nhập!")
     return await this.authService.login(loginDto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthenticationGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(@GetCurrentEmailUser() email: string): Promise<boolean>{
@@ -57,18 +63,36 @@ export class AuthController {
   }
 
   @Public()
-  @UseGuards(RefreshGuard)
+  @UseGuards(RefreshGuard) // để ngăn ng khác thay đổi rf
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   refreshToken(
     @GetCurrentEmailUser() email: string,
     @GetCurrentUser('refreshToken') refreshToken: string,
-  ){
-    this.authService.refreshToken(email, refreshToken);
+  ): Promise<Tokens> {
+    console.log({
+      email,
+      refreshToken
+    })
+    return this.authService.refreshToken(email, refreshToken);
   }  
   
-  @Post()
+  @Post('forgetPassword')
   forgetPassword(){
+    console.log("You choose the forgetPassword func!")
     return this.authService.forgetPassword();
+  }
+
+  
+  //@UseGuards(AuthenticationGuard)
+  @UseGuards(AuthenticationGuard)
+  @Post('show-list')
+  //@UseGuards(RolesGuard)
+  //@Roles(Role.Admin)
+  @HttpCode(HttpStatus.OK)
+  async ShowAccountList(@GetCurrentRoleUser() role: string){
+    if (role == 'user') return 'ban Khong co tuoi!';
+    console.log('Thuan sao ăn gi cute z !!! =)))')
+    return await this.authService.ShowAccountList();
   }
 }

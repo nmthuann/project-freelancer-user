@@ -12,6 +12,10 @@ export class AccountUserService{
       private accountUserRepository: Repository<AccountUserEntity>,
     ) {}
 
+    async getAccountUsers(): Promise<AccountUserEntity[]> {
+        return await this.accountUserRepository.find();
+    }
+
     // Tạo Account
     async createAccountUser(inputs: CreateAccountUserDto): Promise<AccountUserEntity> {
           return await this.accountUserRepository.create(inputs);
