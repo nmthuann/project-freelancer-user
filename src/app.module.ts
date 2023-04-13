@@ -10,6 +10,8 @@ import { AccountUserModule } from './modules/account-users/accountUser.module';
 import { AuthModule } from './modules/authentication/auth.module';
 import { InformationUserEntity } from './modules/infor-users/inforUser.entity';
 import { ProfileUserEntity } from './modules/profile-users/profileUser.entity';
+import { InformationUserlModule } from './modules/infor-users/inforUser.module';
+import { ProfileUserlModule } from './modules/profile-users/profileUser.module';
 
 @Module({
   imports: [TypeOrmModule.forRoot(
@@ -20,32 +22,14 @@ import { ProfileUserEntity } from './modules/profile-users/profileUser.entity';
         username: 'root',
         password: null,
         database: 'freelancerproject-user',
-        entities: [AccountUserEntity], //InformationUserEntity, ProfileUserEntity
+        entities: [AccountUserEntity, InformationUserEntity, ProfileUserEntity], //InformationUserEntity, ProfileUserEntity
         synchronize: false// fix: false -> migration
-      }),  AuthModule, ],
+      }),  //AuthModule, 
+      AccountUserModule, InformationUserlModule, ProfileUserlModule
+     ],
   controllers: [AppController],
-  providers: [AppService,
-  // {
-  //   provide: APP_GUARD,
-  //   useClass: RolesGuard,
-  // },
-],
+  providers: [AppService,],
 })
 
 export class AppModule  {// implements NestModule
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer
-  //     .apply(LoggerMiddleware)
-  //     .exclude(
-  //       { path: 'users', method: RequestMethod.GET },
-  //       { path: 'users', method: RequestMethod.POST },
-  //       'cats/(.*)',)
-  //     .forRoutes({path: 'posts', method: RequestMethod.GET} ); // .forRoutes(CatsController);
-  // }
-
 }
-
-// {
-//       provide: APP_GUARD,
-//       useClass: AuthenticationGuard,
-//     },

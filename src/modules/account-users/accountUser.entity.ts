@@ -13,7 +13,7 @@ export class AccountUserEntity extends BaseEntity {
     @Column({ default: 'active' })
     status: string;
 
-    @Column()
+    @Column({default: null})
     refresh_token: string;
 
     @Column({type: 'enum', enum: Role, default: Role.User})

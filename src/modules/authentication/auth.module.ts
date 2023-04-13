@@ -17,9 +17,15 @@ import { AuthenticationGuard } from 'src/guards/authentication.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { RefreshGuard } from 'src/guards/refresh.guard';
+import { KafkaModule } from 'src/kafka/kafka.module';
+// import { CreateConsumer } from './create.consumer';
+// import { AuthConsumerService } from './auth.consumer.service';
+import { AuthApiGatewayService } from './auth.api.service';
+//import { CreateConsumer } from './create.consumer';
 
 @Module({
       imports: [
+        KafkaModule,
         //AccountUserModule,
         JwtModule.register({
           secret: 'JWT_SECRET_KEY',
@@ -35,6 +41,8 @@ import { RefreshGuard } from 'src/guards/refresh.guard';
           provide: APP_GUARD,
           useClass: RolesGuard,
         }, 
+        AuthApiGatewayService
+        //AuthConsumerService
       ]
 })
 export class AuthModule {}

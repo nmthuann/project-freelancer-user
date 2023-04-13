@@ -1,10 +1,9 @@
 import { BaseEntity } from "src/common/bases/base.entity"
-import { Entity,  Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from "typeorm"
+import { Entity,  Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, Generated } from "typeorm"
 import { InformationUserEntity } from "../infor-users/inforUser.entity";
 
 @Entity({name:'ProfileUsers'})
-export class ProfileUserEntity extends BaseEntity { 
-
+export class ProfileUserEntity extends BaseEntity {
     @PrimaryGeneratedColumn()
     profile_id: number;
 
@@ -12,14 +11,14 @@ export class ProfileUserEntity extends BaseEntity {
     @JoinColumn()
     infor: InformationUserEntity;
 
-    @Column()
+    @Column({nullable: false})
     avatar: string;
 
-    @Column({nullable: false})
+    @Column()
     occupation: string;
 
     @Column()
-    myskill: string;
+    my_skill: string;
 
     @Column({default: "new seller"})
     level: string;

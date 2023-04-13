@@ -2,11 +2,11 @@ import { Body, Controller, HttpException, HttpStatus,
   Post, UseGuards, Request, Get, Param, UsePipes,
    HttpCode, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAccountUserDto } from '../account-users/create-accountUser.dto';
+import { CreateAccountUserDto } from '../account-users/account-user-dto/create-accountUser.dto';
 import { LocalAuthGuard } from 'src/guards/local.guard';
 import { AuthenticationGuard } from 'src/guards/authentication.guard';
 import { ValidatorPipe } from 'src/pipes/validator.pipe';
-import { LoginUserDto } from '../account-users/login-accountUser.dto';
+import { LoginUserDto } from '../account-users/account-user-dto/login-accountUser.dto';
 import { RefreshGuard } from 'src/guards/refresh.guard';
 import { AuthGuard } from '@nestjs/passport';
 import { Tokens } from '../../common/types/token.type';
@@ -39,7 +39,7 @@ export class AuthController {
  //fucntion register user
  
   @Public()
-  @Post('register')
+  @Post('register') // check login hoặc chưa
   @UsePipes(new TransformPipe())
   @HttpCode(HttpStatus.CREATED)
   async registerUser(@Body() input: CreateAccountUserDto): Promise<Tokens> {
@@ -74,13 +74,13 @@ export class AuthController {
       email,
       refreshToken
     })
-    return this.authService.refreshToken(email, refreshToken);
+    return this.authService.refreshTokenold(email, refreshToken);
   }  
   
-  @Post('forgetPassword')
-  forgetPassword(){
+  @Post('forgetPassword/:email')
+  forgetPassword(@Param('email') email: string){
     console.log("You choose the forgetPassword func!")
-    return this.authService.forgetPassword();
+    return this.authService.forgetPassword(email);
   }
 
   
@@ -91,8 +91,9 @@ export class AuthController {
   //@Roles(Role.Admin)
   @HttpCode(HttpStatus.OK)
   async ShowAccountList(@GetCurrentRoleUser() role: string){
-    if (role == 'user') return 'ban Khong co tuoi!';
-    console.log('Thuan sao ăn gi cute z !!! =)))')
+    if (role == 'user') 
+      return "ERORR 403: Forbidden!";//'ban Khong co tuoi!';
+    //console.log('Thuan sao ăn gi cute z !!! =)))')
     return await this.authService.ShowAccountList();
   }
 }
