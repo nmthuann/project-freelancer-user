@@ -10,9 +10,4 @@ import { InformationUserService } from './inforUser.service';
   providers: [InformationUserService]
 })
 export class InformationUserlModule {
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer
-  //     .apply(CategoryMiddleware)
-  //     .forRoutes('*');
-  // }
 }

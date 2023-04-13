@@ -1,5 +1,5 @@
 import { BaseEntity } from "src/common/bases/base.entity"
-import { Entity,  Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from "typeorm"
+import { Entity,  Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, PrimaryColumn } from "typeorm"
 import { AccountUserEntity } from "../account-users/accountUser.entity";
 
 @Entity({name:'InformationUsers'})
@@ -8,7 +8,8 @@ export class InformationUserEntity extends BaseEntity {
     infor_id: number;
 
     @OneToOne(() => AccountUserEntity)
-    @JoinColumn()
+    @JoinColumn() //{unique: true}
+    //@Column({unique: true})
     account: AccountUserEntity;
 
     @Column({nullable: false})
@@ -20,7 +21,7 @@ export class InformationUserEntity extends BaseEntity {
     @Column()
     gender: string;
 
-    @Column()
+    @Column({nullable: false})
     birthday: Date;
 
     @Column()
@@ -30,10 +31,5 @@ export class InformationUserEntity extends BaseEntity {
     phone: string;
 
     @Column()
-    education: string;
-
-
-
-
-
+    education: string;  
 }

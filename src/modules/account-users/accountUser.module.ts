@@ -1,18 +1,16 @@
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JsonWebTokenStrategy } from 'src/strategies/jwt.strategy';
-//import { JsonWebTokenStrategy } from 'src/strategies/jwt.strategy';
-// import { AuthModule } from '../authentication/auth.module';
-// import { AuthService } from '../authentication/auth.service';
 import { AccountUserController } from './accountUser.controller';
 import { AccountUserEntity } from './accountUser.entity';
 import { AccountUserService } from './accountUser.service';
 
 @Module({
-      imports: [ TypeOrmModule.forFeature([AccountUserEntity])],
-      controllers: [AccountUserController],
+      imports: [TypeOrmModule.forFeature([AccountUserEntity])],
+
       providers: [AccountUserService],
-      exports: [AccountUserService],
+      controllers: [AccountUserController],
+      
+      //exports: [AccountUserService],
     })
 export class AccountUserModule {
   // configure(consumer: MiddlewareConsumer) {

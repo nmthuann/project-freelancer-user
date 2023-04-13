@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { AuthPayload } from 'src/modules/authentication/auth.payload.interface';
+import { AuthPayload } from 'src/modules/authentication/auth-dto/auth.payload.interface';
 import { Strategy, ExtractJwt  } from 'passport-jwt';
 import { Request } from 'express';
 import { Payload } from 'src/common/types/payload.type';

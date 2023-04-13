@@ -1,21 +1,19 @@
 import { ForbiddenException, HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
-// import { from, Observable } from "rxjs";
-// import { Repository } from "typeorm";
-// import { AccountUserDto } from "../account-users/accountUser.dto";
-// import { AccountUserEntity } from "../account-users/accountUser.entity";
 import * as bcrypt from 'bcrypt';
 import { JwtService } from "@nestjs/jwt";
 import { AccountUserService } from "../account-users/accountUser.service";
-import { AuthPayload } from "./auth.payload.interface";
-import { LoginUserDto } from "../account-users/login-accountUser.dto";
-import { CreateAccountUserDto } from "../account-users/create-accountUser.dto";
+import { AuthPayload } from "./auth-dto/auth.payload.interface";
+import { LoginUserDto } from "../account-users/account-user-dto/login-accountUser.dto";
+import { CreateAccountUserDto } from "../account-users/account-user-dto/create-accountUser.dto";
 import { NextFunction, Request, Response } from "express";
 import * as dotenv from 'dotenv';
 import { RefreshJWTStrategy } from "src/strategies/refresh.strategy";
-import { UpdateAccountUserDto } from "../account-users/update-account.dto";
+import { UpdateAccountUserDto } from "../account-users/account-user-dto/update-account.dto";
 import { Tokens } from "src/common/types/token.type";
 import { Payload } from "src/common/types/payload.type";
 dotenv.config();
+import nodemailer from 'nodemailer';
+import { RefreshDto } from "./auth-dto/refresh.dto";
 
 /**
  * 1. hashPassword
@@ -53,7 +51,7 @@ export class AuthService {
   }
 
   async authentication(email: string, password: string): Promise<any> {
-    const user = await this.accountUserService.getUserByEmail(email);
+    const user = await this.accountUserService.getAccountUserByEmail(email);
     const checkPass = await this.comparePassword(password, user.password);
 
     if (!user || !checkPass) {
@@ -110,8 +108,25 @@ export class AuthService {
     const updateUserDto = new UpdateAccountUserDto();
     updateUserDto.email = email;
     updateUserDto.refresh_token = refresh;
-    await this.accountUserService.updateRefreshToken(email, updateUserDto);
+    await this.accountUserService.updateAccountUser(email, updateUserDto);
   }
+
+  // hàm random password
+  randomPassword(length: number, base: string){
+    //const baseString = "0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
+    const getRandomInt = (min: number, max: number) => {
+      return Math.floor(Math.random() * (max - min)) + min;
+    };
+    let result = "";
+    const baseLength = base.length;
+    for (let i = 0; i < length; i++) {
+      const randomIndex = getRandomInt(0, baseLength);
+      result += base[randomIndex];
+    }
+    return result;
+  }
+  
+
 
   /**
    *  ___________________________________________________________________________________
@@ -121,7 +136,7 @@ export class AuthService {
 
   // đăng kí tài khoản -> Done!
   async registerUser(input: CreateAccountUserDto) {
-    const checkUser = await this.accountUserService.getUserByEmail(input.email);
+    const checkUser = await this.accountUserService.getAccountUserByEmail(input.email);
     if (checkUser) {
       throw new HttpException(
         { message: 'User already exists' },
@@ -139,7 +154,7 @@ export class AuthService {
     update.email = newUser.email;
     update.refresh_token = tokens.refresh_token;
     update.password = input.password;
-    await this.accountUserService.updateRefreshToken(newUser.email, update)
+    await this.accountUserService.updateAccountUser(newUser.email, update)
     console.log(newUser);
     return tokens;
   }
@@ -147,7 +162,7 @@ export class AuthService {
   // đăng nhập 
   async login(input: LoginUserDto) {
     console.log('value of input: ', input);
-    const checkUser = await this.accountUserService.getUserByEmail(input.email);
+    const checkUser = await this.accountUserService.getAccountUserByEmail(input.email);
     console.log('value of checkUser: ', checkUser);
     if (checkUser) {
       const checkPass = await this.comparePassword(input.password, checkUser.password);
@@ -175,7 +190,7 @@ export class AuthService {
 
   // Done!
   async logout(email: string): Promise<boolean> {
-    const checkUser = await this.accountUserService.getUserByEmail(email);
+    const checkUser = await this.accountUserService.getAccountUserByEmail(email);
     await this.updateRefreshToken(checkUser.email, null); //???
     console.log("Ban da dang xuat!");
     return true;
@@ -198,18 +213,18 @@ export class AuthService {
   //   }
   // }
 
-  // re
-  async refreshToken(email: string, rt: string): Promise<Tokens> {
+  async refreshTokenold(email: string, rt: string): Promise<Tokens> {
      console.log({
       email,
       rt
     });
-    const checkUser = await this.accountUserService.getUserByEmail(email);
+    const checkUser = await this.accountUserService.getAccountUserByEmail(email);
     //console.log(checkUser);
+    
     if (!checkUser || !checkUser.refresh_token) throw new ForbiddenException('Access Denied');
 
-    const test = 'REFRESH_JWT_SECRET_KEY';//process.env.REFRESH_SECRET
-    const refreshMatches = await this.jwtService.decode(rt);
+    //const test = 'REFRESH_JWT_SECRET_KEY';//process.env.REFRESH_SECRET
+    const refreshMatches = this.jwtService.decode(rt);
     console.log("refreshToken func, refreshMatches: ", refreshMatches);
     if (!refreshMatches) throw new ForbiddenException('Access Denied');
 
@@ -219,8 +234,69 @@ export class AuthService {
     return tokens;
   }
 
-  forgetPassword() {
-    throw new Error('Method not implemented.');
+  async refreshToken(refreshDto: RefreshDto): Promise<Tokens> {
+    const checkUser = await this.accountUserService.getAccountUserByEmail(refreshDto.email);
+    if (!checkUser || !checkUser.refresh_token) throw new ForbiddenException('Access Denied');
+    const refreshMatches = this.jwtService.decode(refreshDto.current_refresh_Token);
+    console.log("refreshToken func, refreshMatches: ", refreshMatches);
+    if (!refreshMatches) throw new ForbiddenException('Access Denied');
+    const tokens = await this.getTokens({email: checkUser.email, role: checkUser.role});
+    await this.updateRefreshToken(checkUser.email, tokens.refresh_token);
+    console.log("refreshToken func, tokens ", tokens);
+    return tokens;
+  }
+
+  async forgetPassword(email: string) {
+    //throw new Error('Method not implemented.');
+    
+    const checkUser = await this.accountUserService.getAccountUserByEmail(email);
+    if (!checkUser){
+      // return 'Email không tồn tại!'
+      throw new HttpException(
+        { message: 'Email không tồn tại!' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    else{
+      const baseString ="0123456789qwertyuiopasdfghjklzxcvbnm";
+      console.log(`Password: ${this.randomPassword(6, baseString)}`);
+
+      const update = new UpdateAccountUserDto()
+      update.email = checkUser.email;
+      update.refresh_token = checkUser.refresh_token;
+      update.password = this.randomPassword(6, baseString); // đổi pass
+      update.password = await bcrypt.hash(update.password, 12); // hash pass
+      await this.accountUserService.updateAccountUser(checkUser.email, update)
+      console.log(update);
+
+      var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'nmt.m10.2862001@gmail.com',
+          pass: process.env.PasswordEmail
+        }
+      });
+
+      var mailOptions = {
+        from: 'nmt.m10.2862001@gmail.com',
+        to: email,
+        subject: 'Thay doi mat khau',
+        text: `mật khẩu của bạn là: ${update.password}  `
+      };
+
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });
+      return update;
+    }
+  }
+
+  changePassword(){
+    return 'Chua hoan thanh !'
   }
 
   async ShowAccountList(){
