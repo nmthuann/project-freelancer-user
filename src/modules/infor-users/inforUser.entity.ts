@@ -1,16 +1,12 @@
 import { BaseEntity } from "src/common/bases/base.entity"
-import { Entity,  Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, PrimaryColumn } from "typeorm"
+import { Entity,  Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, PrimaryColumn, AfterInsert, In, getConnection } from "typeorm"
 import { AccountUserEntity } from "../account-users/accountUser.entity";
+import { ProfileUserEntity } from "../profile-users/profileUser.entity";
 
 @Entity({name:'InformationUsers'})
 export class InformationUserEntity extends BaseEntity { 
     @PrimaryGeneratedColumn()
     infor_id: number;
-
-    @OneToOne(() => AccountUserEntity)
-    @JoinColumn() //{unique: true}
-    //@Column({unique: true})
-    account: AccountUserEntity;
 
     @Column({nullable: false})
     first_name: string;
@@ -31,5 +27,15 @@ export class InformationUserEntity extends BaseEntity {
     phone: string;
 
     @Column()
-    education: string;  
+    education: string;
+    
+
+    @OneToOne(() => AccountUserEntity,  (account) =>  account.infor)
+    @JoinColumn()
+    account: AccountUserEntity;
+
+
+    @OneToOne(() => ProfileUserEntity, (profile) => profile.infor, { cascade: true })
+    @JoinColumn()
+    profile: ProfileUserEntity;
 }

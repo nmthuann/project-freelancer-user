@@ -3,7 +3,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put,
 import { ValidatorPipe } from 'src/pipes/validator.pipe';
 import { CreateProfileUserDto } from './profile-user-dto/create-profileUser.dto';
 import { ProfileUserService } from './profileUser.service';
-import { UpdateProfileUserDto } from './profile-user-dto/profileUser.dto';
+import { ProfileUserDto } from './profile-user-dto/profileUser.dto';
 
 // working with DTO
 @Controller('profile-user') 
@@ -17,13 +17,13 @@ export class ProfileUserController  {
     
     @Post('create')
     @UsePipes(new ValidatorPipe())
-    createProfileUser(@Body() profileDto: CreateProfileUserDto) {
+    createProfileUser(@Body() profileDto: ProfileUserDto) {
         return this.profileUserService.createProfileUser(profileDto);
     }
 
     @Put('update/:id')
     async updateProfileUserById(@Param('id') id: number,
-     @Body() profileDto: UpdateProfileUserDto,): Promise<UpdateProfileUserDto> {
+     @Body() profileDto: ProfileUserDto,): Promise<ProfileUserDto> {
         return this.profileUserService.updateProfileUserById(id,profileDto);
     }
 
