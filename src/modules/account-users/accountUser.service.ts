@@ -4,8 +4,10 @@ import { DeleteResult, Repository } from "typeorm";
 import { AccountUserEntity } from "./accountUser.entity";
 import { CreateAccountUserDto } from "./account-user-dto/create-accountUser.dto";
 import { UpdateAccountUserDto } from "./account-user-dto/update-account.dto";
-import { UpdateRoleInAccountUserDto } from "./account-user-dto/update-accoutUser.dto";
+import { UpdateRoleInAccountUserDto } from "./account-user-dto/updateRole-accoutUser.dto";
 import { Role } from "src/common/enums/role.enum";
+import { InformationUserEntity } from "../infor-users/inforUser.entity";
+import { AccountUserDto } from "./account-user-dto/accountUser.dto";
 
 /**
  * 1. getAccountUsers
@@ -28,10 +30,20 @@ export class AccountUserService{
   }
 
   // FindUserByEmail
-  async getAccountUserByEmail(email: string): Promise<AccountUserEntity> {
+  async getAccountUserByEmail(email: string): Promise<AccountUserDto> {
     return await this.accountUserRepository.findOneBy({
       email: email
     });
+  }
+
+   async getAccountByInforId(infor_id: number): Promise<AccountUserEntity>{
+    const getAccByInforId = await this.accountUserRepository
+    .createQueryBuilder('accountusers')
+    .innerJoinAndSelect('accountusers.inforInforId', 'infor')
+    .where('infor.infor_id = :infor_id', {infor_id : infor_id })
+    .getOne();
+    console.log("getAccByInforId",getAccByInforId)
+    return getAccByInforId;
   }
 
   // Tạo Account
@@ -56,6 +68,13 @@ export class AccountUserService{
     const userByEmail = await this.getAccountUserByEmail(email);
     return await this.accountUserRepository.save({...userByEmail, ...accountDto});
   }
+
+  //  // Cập nhật Account
+  // async updateInforInAccount(accountDto: string){
+  //   const userByEmail = await this.getAccountUserByEmail(email);
+  //   return await this.accountUserRepository.update()
+  // }
+
 
   // delete Account: set status: active => off
   async deleteAccountUserSetOff(email: string): Promise<Boolean>{

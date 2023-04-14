@@ -12,10 +12,12 @@ import { InformationUserEntity } from './modules/infor-users/inforUser.entity';
 import { ProfileUserEntity } from './modules/profile-users/profileUser.entity';
 import { InformationUserlModule } from './modules/infor-users/inforUser.module';
 import { ProfileUserlModule } from './modules/profile-users/profileUser.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ProfileDocumentModule } from './modules/profile-document/profileDocument.module';
 
 @Module({
   imports: [TypeOrmModule.forRoot(
-      {
+      { 
         type: 'mysql',
         host: 'localhost',
         port: 3306,
@@ -25,7 +27,8 @@ import { ProfileUserlModule } from './modules/profile-users/profileUser.module';
         entities: [AccountUserEntity, InformationUserEntity, ProfileUserEntity], //InformationUserEntity, ProfileUserEntity
         synchronize: false// fix: false -> migration
       }),  //AuthModule, 
-      AccountUserModule, InformationUserlModule, ProfileUserlModule
+      AccountUserModule, InformationUserlModule, ProfileUserlModule,
+      MongooseModule.forRoot('mongodb://127.0.0.1:27017/UserFiver'), ProfileDocumentModule,
      ],
   controllers: [AppController],
   providers: [AppService,],
