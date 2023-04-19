@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put,
      Req, UsePipes, NestMiddleware, HttpCode, HttpStatus } from '@nestjs/common';
-import { ValidatorPipe } from 'src/pipes/validator.pipe';
+import { ValidatorPipe } from 'src/common/pipes/validator.pipe';
 import { InformationUserService } from './inforUser.service';
 import { InformationUserEntity } from './inforUser.entity';
 import { InformationUserDto } from './infor-user-dto/inforUser.dto';

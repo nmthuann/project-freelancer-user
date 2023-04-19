@@ -1,5 +1,5 @@
 import { BaseEntity } from "src/common/bases/base.entity"
-import { Role } from "src/common/enums/role.enum";
+import { Role } from "src/common/bases/enums/role.enum";
 import { Entity,  Column, CreateDateColumn, DeepPartial, PrimaryColumn, BeforeInsert, JoinColumn, OneToOne, AfterUpdate, AfterInsert } from "typeorm"
 import { InformationUserEntity } from "../infor-users/inforUser.entity";
 

@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { RefreshPayload } from '../types/refresh.type';
+import { RefreshPayload } from '../bases/types/refresh.type';
 
 export const GetCurrentUser = createParamDecorator(
   (data: string| undefined, context: ExecutionContext) => {
