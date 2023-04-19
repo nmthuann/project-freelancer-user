@@ -43,9 +43,9 @@ export class InformationUserService {
         // cách xử lý này không hay
         try {
             await this.informationUserRepository.save(information);
-            console.log("lưu xong!")
+            console.log("Save Done!")
         } catch (error) {
-            return "Infor đã tồn tại";
+            return "Create Failer!";
         }
 
         const newInfor = await this.informationUserRepository

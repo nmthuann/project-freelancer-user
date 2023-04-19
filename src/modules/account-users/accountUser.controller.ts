@@ -4,11 +4,11 @@ import { AccountUserService } from "./accountUser.service";
 import { AccountUserDto } from "./account-user-dto/accountUser.dto";
 import { LoginUserDto } from "./account-user-dto/login-accountUser.dto";
 import { CreateAccountUserDto } from "./account-user-dto/create-accountUser.dto";
-import { ValidatorPipe } from "src/pipes/validator.pipe";
+import { ValidatorPipe } from "src/common/pipes/validator.pipe";
 import { AuthService } from "../authentication/auth.service";
 import { Roles } from "src/common/decorators/roles.decorator";
-import { Role } from "src/common/enums/role.enum";
-import { TransformPipe } from "src/pipes/transform.pipe";
+import { Role } from "src/common/bases/enums/role.enum";
+import { TransformPipe } from "src/common/pipes/transform.pipe";
 import { UpdateRoleInAccountUserDto } from "./account-user-dto/updateRole-accoutUser.dto";
 import { AccountUserEntity } from "./accountUser.entity";
 

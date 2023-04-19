@@ -3,8 +3,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthenticationGuard } from './guards/authentication.guard';
-import { RolesGuard } from './guards/roles.guard';
+import { AuthenticationGuard } from './common/guards/authentication.guard';
+import { RolesGuard } from './common/guards/roles.guard';
 import { AccountUserEntity } from './modules/account-users/accountUser.entity';
 import { AccountUserModule } from './modules/account-users/accountUser.module';
 import { AuthModule } from './modules/authentication/auth.module';
@@ -26,7 +26,7 @@ import { ProfileDocumentModule } from './modules/profile-document/profileDocumen
         database: 'freelancerproject-user',
         entities: [AccountUserEntity, InformationUserEntity, ProfileUserEntity], //InformationUserEntity, ProfileUserEntity
         synchronize: false// fix: false -> migration
-      }),  //AuthModule, 
+      }),  AuthModule, 
       AccountUserModule, InformationUserlModule, ProfileUserlModule,
       MongooseModule.forRoot('mongodb://127.0.0.1:27017/UserFiver'), ProfileDocumentModule,
      ],

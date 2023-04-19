@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { Payload } from '../types/payload.type';
+import { Payload } from '../bases/types/payload.type';
 
 export const GetCurrentEmailUser = createParamDecorator (
   (_: undefined, context: ExecutionContext): string => {

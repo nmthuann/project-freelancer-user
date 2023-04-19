@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put,
      Req, UsePipes, NestMiddleware, HttpCode, HttpStatus, Patch } from '@nestjs/common';
-import { ValidatorPipe } from 'src/pipes/validator.pipe';
+import { ValidatorPipe } from 'src/common/pipes/validator.pipe';
 import { CreateProfileUserDto } from './profile-user-dto/create-profileUser.dto';
 import { ProfileUserService } from './profileUser.service';
 import { ProfileUserDto } from './profile-user-dto/profileUser.dto';

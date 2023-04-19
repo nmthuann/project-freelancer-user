@@ -1,8 +1,8 @@
 import { Kafka, logLevel } from 'kafkajs';
 import { Injectable } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ProducerService } from 'src/kafka/producer.service';
-import { ConsumerService } from 'src/kafka/consumer.service';
+import { ProducerService } from 'src/modules/kafka/producer.service';
+import { ConsumerService } from 'src/modules/kafka/consumer.service';
 
 @Injectable()
 export class AuthApiGatewayService {
@@ -27,6 +27,7 @@ export class AuthApiGatewayService {
             input: input
           });
 
+          // handle Login with Auth Service
           const result = await this.authService.login(input);
           console.log(result);
 
@@ -40,11 +41,11 @@ export class AuthApiGatewayService {
         },
       },
     );
-    this.consumerService.onApplicationShutdown();
+    await this.consumerService.onApplicationShutdown();
   }
 
   async handleRegister(){
-    this.consumerService.consume(   
+    await this.consumerService.consume(   
       'auth-service',
       { topic: 'api-auth-register-req'},
       {
@@ -148,10 +149,10 @@ export class AuthApiGatewayService {
 
   async onModuleInit() {
     await this.handleLogin();
-    await this.handleRegister();
-    await this.handleLogout();
-    await this.handleRefreshToken();
-    await this.handleForgetPassword();
+    // await this.handleRegister();
+    // await this.handleLogout();
+    // await this.handleRefreshToken();
+    // await this.handleForgetPassword();
   }
 
 }

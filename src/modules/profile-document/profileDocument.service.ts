@@ -6,9 +6,7 @@ import { AccountUserService } from '../account-users/accountUser.service';
 import { InformationUserService } from '../infor-users/inforUser.service';
 import { ProfileUserService } from '../profile-users/profileUser.service';
 import { ProfileDocumentDto } from './profile-document-dto/profileDocument.dto';;
-import { CreateProfileUserDto } from '../profile-users/profile-user-dto/create-profileUser.dto';
 import { UpdateProfileUserDto } from '../profile-users/profile-user-dto/update-profileUser.dto';
-import { UpdateProfileDocumentDto } from './profile-document-dto/update-profileDocument.dto';
 import { CreateInformationUserDto } from '../infor-users/infor-user-dto/create-inforUser.dto';
 import { CreateProfileDetailDto } from './profile-document-dto/create-profileDetail.dto';
 import { UpdateInformationUserDto } from '../infor-users/infor-user-dto/update-inforUser.dto';
@@ -33,20 +31,21 @@ export class ProfileDocumentService {
         }
     }
 
-
     async CreateProfile(profileDto: ProfileDocumentDto) {
-        const createdProfile = new this.profileModel();
 
         // check email: email is exist in Database? -> not valid
         const checkEmail = await this.accountUserService.getAccountUserByEmail(profileDto.email);
         if (!checkEmail) return "email khong hop le";
         else{
+           
+
             // get Infor id in other to create or update?
             const getInforId: number = (await this.informationUserService.getInforIdByEmail(profileDto.email));
             console.log(getInforId)
             if (!getInforId){ // getInforId == null
-                const inforNew = new CreateInformationUserDto();
+                 const createdProfile = new this.profileModel();
 
+                const inforNew = new CreateInformationUserDto();
 
                 inforNew.account = checkEmail;
                 inforNew.first_name = profileDto.first_name;
@@ -57,6 +56,8 @@ export class ProfileDocumentService {
                 inforNew.address = profileDto.address ;
                 inforNew.education = profileDto.education ;
                 console.log("check InforNew:", inforNew)
+
+                // create Information - MySQL
                 await this.informationUserService.createInformationUser(inforNew);
 
                 createdProfile.email = profileDto.email ;
@@ -69,10 +70,10 @@ export class ProfileDocumentService {
                 createdProfile.education = profileDto.education ;
                 createdProfile.profileDetail = null;
 
-                
-
                 console.log("inforNew SQL:", inforNew);
                 console.log("createdProfile NoSQL:", createdProfile);
+
+                // Create Profile - NoSQL
                 return createdProfile.save();
             }
             else{
@@ -88,22 +89,17 @@ export class ProfileDocumentService {
                 const test = await this.informationUserService.updateInformationUserById(getInforId, updateInfor);
                 console.log("updaInfor: ", test )
 
-                createdProfile.email = profileDto.email ;
-                createdProfile.first_name = profileDto.first_name ;
-                createdProfile.last_name = profileDto.last_name ;
-                createdProfile.gender = profileDto.gender ;
-                createdProfile.birthday = profileDto.birthday ;
-                createdProfile.address = profileDto.address ;
-                createdProfile.phone = profileDto.phone;
-                createdProfile.education = profileDto.education ;
-                createdProfile.profileDetail = null;
-                return createdProfile.save();
+                const test2 = await this.profileModel.updateOne(
+                    (await this.profileModel.findOne({ email: profileDto.email })), 
+                    updateInfor
+                );
+
+                return await this.profileModel.findOne({ email: profileDto.email });
             }
         }
     }
 
     async CreateProfileDetail(email:string, profileDetailDto: CreateProfileDetailDto) {
-        //const createdProfile = new this.profileModel();
         // check email
         const checkEmail = await this.profileModel.findOne({
             email: email
@@ -125,23 +121,13 @@ export class ProfileDocumentService {
                     newProfileMySql.avatar = profileDetailDto.avatar;
                     newProfileMySql.my_skill = profileDetailDto.mySkill;
                     newProfileMySql.occupation = profileDetailDto.occupation;
-
+                    
                     const test = await this.profileUserService.createProfileUser(newProfileMySql);
-                    console.log("checktest: ", test);
+                    console.log("checktest - MySQL: ", test);
 
-                    // create
-                    console.log("checktest: ", checkEmail.profileDetail)
-                    
-
-                    // checkEmail.profileDetail.mySkill = profileDetailDto.mySkill;
-                    // checkEmail.profileDetail.avatar = profileDetailDto.avatar;
-                    
-                    // //checkEmail.profileDetail.level = profileDetailDto.level;
-                    // checkEmail.profileDetail.occupation = profileDetailDto.occupation;
-
-                    console.log("checkEmail - create: ", checkEmail);
-                    return await this.profileModel.findOneAndUpdate({email:email}, 
+                    await this.profileModel.findOneAndUpdate({email:email}, 
                         { $set: {profileDetail: profileDetailDto}});
+                    return await this.profileModel.findOne({ email: email });
                 }
             }
             else{
@@ -157,13 +143,12 @@ export class ProfileDocumentService {
                 await this.profileUserService.updateProfileUserById(
                     (await this.profileUserService.getProfileIdByEmail(email)), updateProfileMySql)
 
-                checkEmail.profileDetail.avatar = profileDetailDto.avatar;
-                checkEmail.profileDetail.mySkill = profileDetailDto.mySkill;
-                checkEmail.profileDetail.level = profileDetailDto.level;
-                checkEmail.profileDetail.occupation = profileDetailDto.occupation;
-                
-                console.log("checkEmail - Update: ",checkEmail);
-                return checkEmail.save();
+                const test2 = await this.profileModel.updateOne(
+                    (await this.profileModel.findOne({ email: email })), 
+                    {profileDetail: updateProfileMySql}
+                );
+
+                return await this.profileModel.findOne({ email: email });
             }
         }
     }
