@@ -6,8 +6,8 @@ import {
 import { Kafka, Producer, ProducerRecord } from 'kafkajs';
 
 @Injectable()
-export class ProducerService implements OnModuleInit, OnApplicationShutdown {
-  
+export class ProducerService  { //implements OnModuleInit, OnApplicationShutdown
+
   private readonly kafka = new Kafka({
     clientId: 'auth-consumer',
     brokers: ['localhost:9092'],
@@ -16,13 +16,37 @@ export class ProducerService implements OnModuleInit, OnApplicationShutdown {
   private readonly producer: Producer = this.kafka.producer();
 
   async produce(record: ProducerRecord) {
-    return await this.producer.send(record);
+    //return await this.producer.send(record);
+    try {
+      console.log(`Message sent to topic ${record.topic}: ${JSON.stringify(record.messages)}`);
+      return await this.producer.send(record);
+    } catch (err) {
+      throw new Error(`Failed to send message to topic ${record.topic}: ${err.message}`);
+    }
   }
-  async onModuleInit() {
-    await this.producer.connect();
+
+
+  public async start(): Promise<void> {
+    try {
+      await this.producer.connect()
+    } catch (error) {
+      console.log('Error connecting the producer: ', error)
+    }
   }
-  async onApplicationShutdown() {
-    await this.producer.disconnect();
+
+  public async shutdown(): Promise<void> {
+    await this.producer.disconnect()
+  }
+
+
+  async sendMessage(topic: string, message: object, timeout: number){
+    await this.start();
+    await this.produce({
+      topic: topic,
+      messages: [{value:message.toString()}],
+      timeout: timeout,
+    });
+    await this.shutdown();
   }
   
 }

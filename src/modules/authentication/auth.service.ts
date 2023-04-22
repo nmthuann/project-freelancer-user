@@ -15,6 +15,8 @@ dotenv.config();
 import * as nodemailer from 'nodemailer'
 import { RefreshDto } from "./auth-dto/refresh.dto";
 import { Role } from "src/common/bases/enums/role.enum";
+import { AccessTokenDto } from "./auth-dto/accessToken.dto";
+import { ChangePasswordDto } from "./auth-dto/changePass.dto";
 
 /**
  * 1. hashPassword
@@ -75,7 +77,7 @@ export class AuthService {
   }
 
   // gettoken -> [access,refresh]
-  async getTokens(payload: Payload): Promise<any> {
+  async getTokens(payload: Payload): Promise<Tokens> {
     const [jwt, refresh] = await Promise.all([
       this.jwtService.signAsync({payload}, {
           secret: 'JWT_SECRET_KEY',
@@ -93,13 +95,13 @@ export class AuthService {
     }
   }
 
-  // update Refresh token
-  async updateRefreshToken(email: string, refresh: string){
-    const updateUserDto = new UpdateAccountUserDto();
-    updateUserDto.email = email;
-    updateUserDto.refresh_token = refresh;
-    await this.accountUserService.updateAccountUser(email, updateUserDto);
-  }
+  // // update Refresh token
+  // async updateRefreshToken(email: string, refresh: string){
+  //   const updateUserDto = new UpdateAccountUserDto();
+  //   updateUserDto.email = email;
+  //   updateUserDto.refresh_token = refresh;
+  //   await this.accountUserService.updateAccountUser(email, updateUserDto);
+  // }
 
   // hàm random password
   randomPassword(length: number, base: string){
@@ -125,87 +127,125 @@ export class AuthService {
    */
 
   // đăng kí tài khoản -> Done!
-  async registerUser(input: CreateAccountUserDto) {
+  async registerUser(input: CreateAccountUserDto): Promise<AccessTokenDto | object> {
     const checkUser = await this.accountUserService.getAccountUserByEmail(input.email);
     if (checkUser) {
-      throw new HttpException(
-      { message: 'User already exists' },
-        HttpStatus.BAD_REQUEST,
-      );
+      // throw new HttpException(
+      // { message: 'User already exists' },
+      //   HttpStatus.BAD_REQUEST,
+      // );
+      return {message: 'User already exists'}
     }
+
     input.password = await bcrypt.hash(input.password, 12); // hash pass
 
     // create account
     const newUser = await this.accountUserService.createAccountUser(input);
-    const tokens = await this.getTokens({email: newUser.email, role: Role.User});
-    const update = new UpdateAccountUserDto();
-    update.email = newUser.email;
-    update.refresh_token = tokens.refresh_token;
-    update.password = input.password;
+
+    const tokens = await this.getTokens({
+      email: newUser.email,
+      role: Role.User
+    });
+
+    const update = new UpdateAccountUserDto(
+      newUser.email,input.password,
+      tokens.refresh_token,
+      null
+    );
+
     await this.accountUserService.updateAccountUser(newUser.email, update)
     console.log(newUser);
-    return tokens;
+
+    const accessTokenDto = new AccessTokenDto(tokens.access_token);
+    return accessTokenDto;
   }
 
   // đăng nhập 
-  async login(input: LoginUserDto) {
-    const checkUser = await this.accountUserService.getAccountUserByEmail(input.email);
-    if (checkUser) {
-      const checkPass = await this.comparePassword(input.password, checkUser.password);
-      if (!checkPass) {
-        throw new HttpException(
-          { message: 'password wrong' },
-          HttpStatus.BAD_REQUEST,);
+  async login(input: LoginUserDto): Promise<AccessTokenDto | object> {
+    // const checkUser = await this.accountUserService.CheckEmailExsit(input.email);
+    const findUser = await this.accountUserService.getAccountUserByEmail(input.email);
+    if (findUser){
+      const checkPass = await this.comparePassword(input.password, findUser.password);
+       if (!checkPass) {
+        console.log('password wrong!')
+        return {message: 'password wrong!'}
+        // throw new HttpException(
+        // { message: 'password wrong!' },
+        // HttpStatus.BAD_REQUEST,
+        // );
       }
-    }
-    else {
-      throw new UnauthorizedException('Credentials incorrect');
+    } 
+    else{
+      //throw new Error('email or Password Invalid!')
+      // throw new HttpException(
+        // { message: 'email or Password Invalid!' },
+        // HttpStatus.BAD_REQUEST,
+        // );
+      return {message: 'email or Password Invalid!'}
+      //UnauthorizedException('Credentials incorrect');
     }
 
     // write infor put in Payload
     const payload: Payload = {
       email: input.email,
-      role: checkUser.role
+      role: findUser.role
     };
 
-    const tokens = await this.getTokens(payload);
-    await this.updateRefreshToken(checkUser.email, tokens.refresh_token);
-    return tokens;
+    const tokens: Tokens = await this.getTokens(payload);
+
+    findUser.refresh_token = tokens.refresh_token;
+    await this.accountUserService.updateAccountUser(findUser.email, findUser);
+
+    const accessTokenDto = new AccessTokenDto(tokens.access_token);
+    return accessTokenDto;
   }
 
   // Done!
   async logout(email: string): Promise<boolean> {
     const checkUser = await this.accountUserService.getAccountUserByEmail(email);
-    await this.updateRefreshToken(checkUser.email, null); //???
-    console.log("Ban da dang xuat!");
+    checkUser.refresh_token = null;
+    await this.accountUserService.updateAccountUser(checkUser.email, checkUser);
+    console.log(`${email} da dang xuat!`);
     return true;
   }
 
-  async refreshTokenold(email: string, rt: string): Promise<Tokens> {
+  // async refreshTokenold(email: string, rt: string): Promise<Tokens> {
+  //   const checkUser = await this.accountUserService.getAccountUserByEmail(email);
+  //   if (!checkUser || !checkUser.refresh_token) throw new ForbiddenException('Access Denied');
+  //   const refreshMatches = this.jwtService.decode(rt);
+  //   console.log("refreshToken func, refreshMatches: ", refreshMatches);
+  //   if (!refreshMatches) throw new ForbiddenException('Access Denied');
+  //   const tokens = await this.getTokens({email: checkUser.email, role: checkUser.role});
+  //   await this.updateRefreshToken(checkUser.email, tokens.refresh_token);
+  //   console.log("refreshToken func, tokens ", tokens);
+  //   return tokens;
+  // }
+
+  async refreshToken(email: string): Promise<AccessTokenDto | object> {// refreshDto: RefreshDto
+    // check cái access token ở trong cache - 
     const checkUser = await this.accountUserService.getAccountUserByEmail(email);
-    if (!checkUser || !checkUser.refresh_token) throw new ForbiddenException('Access Denied');
-    const refreshMatches = this.jwtService.decode(rt);
-    console.log("refreshToken func, refreshMatches: ", refreshMatches);
-    if (!refreshMatches) throw new ForbiddenException('Access Denied');
+    if (!checkUser || !checkUser.refresh_token) {
+      //throw new ForbiddenException('Access Denied');
+      return {message: 'Access Denied!'}
+    }
+    const refreshMatches = this.jwtService.decode(checkUser.refresh_token);
+    if (!refreshMatches){
+      // throw new ForbiddenException('Access Denied');
+      return {message: 'Access Denied!'}
+    } 
     const tokens = await this.getTokens({email: checkUser.email, role: checkUser.role});
-    await this.updateRefreshToken(checkUser.email, tokens.refresh_token);
-    console.log("refreshToken func, tokens ", tokens);
-    return tokens;
+    checkUser.refresh_token = tokens.refresh_token;
+    await this.accountUserService.updateAccountUser(checkUser.email, checkUser);
+    
+    const accessTokenDto = new AccessTokenDto(tokens.access_token);
+    return accessTokenDto;
   }
 
-  async refreshToken(refreshDto: RefreshDto): Promise<Tokens> {
-    const checkUser = await this.accountUserService.getAccountUserByEmail(refreshDto.email);
-    if (!checkUser || !checkUser.refresh_token) throw new ForbiddenException('Access Denied');
-    const refreshMatches = this.jwtService.decode(refreshDto.current_refresh_Token);
-    console.log("refreshToken func, refreshMatches: ", refreshMatches);
-    if (!refreshMatches) throw new ForbiddenException('Access Denied');
-    const tokens = await this.getTokens({email: checkUser.email, role: checkUser.role});
-    await this.updateRefreshToken(checkUser.email, tokens.refresh_token);
-    console.log("refreshToken func, tokens ", tokens);
-    return tokens;
-  }
 
-  async forgetPassword(email: string) {
+  
+
+
+  async forgetPassword(email: string): Promise<AccessTokenDto | object> {
     //throw new Error('Method not implemented.');
     
     const checkUser = await this.accountUserService.getAccountUserByEmail(email);
@@ -218,44 +258,79 @@ export class AuthService {
     }
     else{
       const baseString ="0123456789qwertyuiopasdfghjklzxcvbnm";
-      console.log(`Password: ${this.randomPassword(6, baseString)}`);
+      //console.log(`Password: ${this.randomPassword(6, baseString)}`);
 
-      const update = new UpdateAccountUserDto()
-      update.email = checkUser.email;
-      update.refresh_token = checkUser.refresh_token;
-      update.password = this.randomPassword(6, baseString); // đổi pass
-      update.password = await bcrypt.hash(update.password, 12); // hash pass
+      var newPass = this.randomPassword(8, baseString);
+      console.log("newPass", newPass);
+      newPass = await bcrypt.hash(newPass, 12);
+
+      const update = new UpdateAccountUserDto(
+        checkUser.email, 
+        newPass, 
+        checkUser.refresh_token, 
+        checkUser.infor
+      );
+
       await this.accountUserService.updateAccountUser(checkUser.email, update)
-      console.log(update);
+      
 
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: 'thuanminh.2001286@gmail.com',
-          pass: process.env.PasswordEmail
-        }
-      });
+      // const transporter = nodemailer.createTransport({
+      //   service: 'gmail',
+      //   auth: {
+      //     user: 'thuanminh.2001286@gmail.com',
+      //     pass: process.env.PasswordEmail
+      //   }
+      // });
 
-      const mailOptions = {
-        from: 'thuanminh.2001286@gmail.com',
-        to: 'nmt.m10.2862001@gmail.com',
-        subject: 'Thay doi mat khau',
-        text: `mật khẩu của bạn là: ${update.password}  `
-      };
+      // const mailOptions = {
+      //   from: 'thuanminh.2001286@gmail.com',
+      //   to: 'nmt.m10.2862001@gmail.com',
+      //   subject: 'Thay doi mat khau',
+      //   text: `mật khẩu của bạn là: ${update.password}  `
+      // };
 
-      transporter.sendMail(mailOptions, function(error, info){
-        if (error) {
-          console.log(error);
-        } else {
-          console.log('Email sent: ' + info.response);
-        }
-      });
-      return update;
+      // transporter.sendMail(mailOptions, function(error, info){
+      //   if (error) {
+      //     console.log(error);
+      //   } else {
+      //     console.log('Email sent: ' + info.response);
+      //   }
+      // });
+
+      const access_token = this.refreshToken(email);
+      return access_token;
     }
   }
 
-  changePassword(){
-    return 'Chua hoan thanh !'
+  async changePassword(
+    email: string, 
+    input: ChangePasswordDto
+  ): Promise<AccessTokenDto | object>{
+
+    const findUser = await this.accountUserService.getAccountUserByEmail(email);
+    if (findUser){
+      const checkPass = await this.comparePassword(input.currentPass, findUser.password);
+       if (!checkPass) {
+        console.log('password wrong!')
+        return {message: 'password wrong!'}
+      }
+    } 
+    else{
+      return {message: 'email or Password Invalid!'}
+    }
+
+    input.newPass = await bcrypt.hash(input.newPass, 12);
+
+    const tokens = await this.getTokens({email: email, role: findUser.role});
+
+    findUser.password = input.newPass;
+
+    await this.accountUserService.updateAccountUser(findUser.email, findUser);
+    
+    const accessTokenDto = new AccessTokenDto(tokens.access_token);
+    return accessTokenDto;
+
+    return ;
   }
 
   async ShowAccountList(){

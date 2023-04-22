@@ -42,6 +42,11 @@ export class AccountUserService{
     }
   }
 
+    async CheckEmailExsit(email: string): Promise<boolean>{
+    const findUser = await this.getAccountUserByEmail(email);
+    if (!findUser) return false;
+    return true
+  }
 
 
   // Create Account
@@ -79,12 +84,6 @@ export class AccountUserService{
 
   async deleteAccountUserByEmail(email : string): Promise<DeleteResult> {
       return this.accountUserRepository.softDelete(email);
-  }
-
-  async CheckEmailExsit(email: string): Promise<boolean>{
-    const findUser = await this.getAccountUserByEmail(email);
-    if (!findUser) return false;
-    return true
   }
 
   async getAccountByInforId(infor_id: number): Promise<AccountUserDto>{
