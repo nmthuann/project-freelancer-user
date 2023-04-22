@@ -3,7 +3,6 @@ import { Body, Controller, HttpException, HttpStatus,
    HttpCode, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAccountUserDto } from '../account-users/account-user-dto/create-accountUser.dto';
-import { LocalAuthGuard } from 'src/common/guards/local.guard';
 import { AuthenticationGuard } from 'src/common/guards/authentication.guard';
 import { ValidatorPipe } from 'src/common/pipes/validator.pipe';
 import { LoginUserDto } from '../account-users/account-user-dto/login-accountUser.dto';
@@ -19,6 +18,8 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Payload } from 'src/common/bases/types/payload.type';
 import { GetCurrentRoleUser } from 'src/common/decorators/get-currentRoleUser.decorator';
+import { AccessTokenDto } from './auth-dto/accessToken.dto';
+import { ChangePasswordDto } from './auth-dto/changePass.dto';
 
 /**
  * Authentication/ 
@@ -40,17 +41,17 @@ export class AuthController {
  
   @Public()
   @Post('register') // check login hoặc chưa
-  @UsePipes(new TransformPipe())
+  @UsePipes(new TransformPipe(), new ValidatorPipe())
   @HttpCode(HttpStatus.CREATED)
-  async registerUser(@Body() input: CreateAccountUserDto): Promise<Tokens> {
+  async registerUser(@Body() input: CreateAccountUserDto): Promise<AccessTokenDto | object> {
     return await this.authService.registerUser(input);
   }
   
   //handle login
   @Public()
   @Post('login')
-  @UsePipes(new ValidatorPipe())
-  async login(@Body() loginDto: LoginUserDto): Promise<Tokens> {
+  @UsePipes(new TransformPipe(), new ValidatorPipe())
+  async login(@Body() loginDto: LoginUserDto): Promise<AccessTokenDto | object> {
     console.log(loginDto, "Đã vừa đăng nhập!")
     return await this.authService.login(loginDto);
   }
@@ -62,29 +63,27 @@ export class AuthController {
     return await this.authService.logout(email);
   }
 
-  @Public()
-  @UseGuards(RefreshGuard) // để ngăn ng khác thay đổi rf
-  @Post('refresh')
-  @HttpCode(HttpStatus.OK)
-  refreshToken(
-    @GetCurrentEmailUser() email: string,
-    @GetCurrentUser('refreshToken') refreshToken: string,
-  ): Promise<Tokens> {
-    console.log({
-      email,
-      refreshToken
-    })
-    return this.authService.refreshTokenold(email, refreshToken);
-  }  
-  
-  @Post('forgetPassword/:email')
-  forgetPassword(@Param('email') email: string){
-    console.log("You choose the forgetPassword func!")
-    return this.authService.forgetPassword(email);
+  @UseGuards(AuthenticationGuard)
+  @Post('forget-password')
+  async forgetPassword(@GetCurrentEmailUser() email: string): Promise<AccessTokenDto | object>{
+    return await this.authService.forgetPassword(email);
   }
 
-  
-  //@UseGuards(AuthenticationGuard)
+  @UseGuards(AuthenticationGuard)
+  @Post('refresh-token')
+  async refreshToken(@GetCurrentEmailUser() email: string): Promise<AccessTokenDto | object>{
+    return await this.authService.refreshToken(email);
+  }
+
+  @UseGuards(AuthenticationGuard)
+  @Post('change-password')
+  async changePassword(
+  @GetCurrentEmailUser() email: string,
+  @Body() input: ChangePasswordDto,
+  ): Promise<AccessTokenDto | object>{
+    return await this.authService.changePassword(email, input);
+  }
+
   @UseGuards(AuthenticationGuard)
   @Post('show-list')
   //@UseGuards(RolesGuard)
@@ -97,3 +96,19 @@ export class AuthController {
     return await this.authService.ShowAccountList();
   }
 }
+
+
+// @Public()
+  // @UseGuards(RefreshGuard) // để ngăn ng khác thay đổi rf
+  // @Post('refresh')
+  // @HttpCode(HttpStatus.OK)
+  // refreshToken(
+  //   @GetCurrentEmailUser() email: string,
+  //   @GetCurrentUser('refreshToken') refreshToken: string,
+  // ): Promise<Tokens> {
+  //   console.log({
+  //     email,
+  //     refreshToken
+  //   })
+  //   return this.authService.refreshTokenold(email, refreshToken);
+  // }  

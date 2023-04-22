@@ -16,13 +16,14 @@ import { AuthApiGatewayService } from './auth.api.service';
 
 @Module({
       imports: [
-        //KafkaModule,
+       
         JwtModule.register({
           secret: 'JWT_SECRET_KEY',
           signOptions: { expiresIn: 60},
         }),PassportModule,
         TypeOrmModule.forFeature([AccountUserEntity]),
-        //AccountUserModule,
+        //KafkaModule,
+        //AccountUserModule,  
       ],
       controllers: [AuthController],
       providers: [AuthService, AccountUserService,
