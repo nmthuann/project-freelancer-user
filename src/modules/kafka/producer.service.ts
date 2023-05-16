@@ -39,11 +39,11 @@ export class ProducerService  { //implements OnModuleInit, OnApplicationShutdown
   }
 
 
-  async sendMessage(topic: string, message: object, timeout: number){
+  async sendMessage(topic: string, message: any, timeout: number){
     await this.start();
     await this.produce({
       topic: topic,
-      messages: [{value:message.toString()}],
+      messages: [{value: JSON.stringify(message)}],
       timeout: timeout,
     });
     await this.shutdown();

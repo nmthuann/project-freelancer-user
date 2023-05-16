@@ -2,7 +2,6 @@ import { ForbiddenException, HttpException, HttpStatus, Injectable, Unauthorized
 import * as bcrypt from 'bcrypt';
 import { JwtService } from "@nestjs/jwt";
 import { AccountUserService } from "../account-users/accountUser.service";
-import { AuthPayload } from "./auth-dto/auth.payload.interface";
 import { LoginUserDto } from "../account-users/account-user-dto/login-accountUser.dto";
 import { CreateAccountUserDto } from "../account-users/account-user-dto/create-accountUser.dto";
 import { NextFunction, Request, Response } from "express";
@@ -37,31 +36,21 @@ export class AuthService {
   ) {}
   
   //function hash password
-  async hashPassword(password: string): Promise<string> {
+  private async hashPassword(password: string): Promise<string> {
     //console.log(await bcrypt.hash(password, 10))
     return await (bcrypt.hash(password, '12'));
   }
 
   //function compare password param with user password in database
-  async comparePassword(
+  private async comparePassword(
     password: string,
     storePasswordHash: string,
     ): Promise<any> {
     return await bcrypt.compare(password, storePasswordHash);
   }
 
-  // async authentication(email: string, password: string): Promise<any> {
-  //   const user = await this.accountUserService.getAccountUserByEmail(email);
-  //   const checkPass = await this.comparePassword(password, user.password);
-
-  //   if (!user || !checkPass) {
-  //     return false;
-  //   }
-  //   return user;
-  // }
-
   // function Middleware -> sẽ nằm ở API GateWay
-  async authenToken(req: Request, res: Response, next: NextFunction) {
+  private async authenToken(req: Request, res: Response, next: NextFunction) {
     //const authorizationHeader = req.headers['authorization'];
     const token = req.get('authorization').replace('Bearer', '').trim();
     console.log(token)
@@ -76,12 +65,12 @@ export class AuthService {
     }
   }
 
-  // gettoken -> [access,refresh]
-  async getTokens(payload: Payload): Promise<Tokens> {
+  // gettoken -> [access,refresh] -> create sign
+  private async getTokens(payload: Payload): Promise<Tokens> {
     const [jwt, refresh] = await Promise.all([
       this.jwtService.signAsync({payload}, {
           secret: 'JWT_SECRET_KEY',
-          expiresIn: 60 * 15,
+          expiresIn: 60*60,
       }),
       this.jwtService.signAsync({payload}, {
           secret: 'REFRESH_JWT_SECRET_KEY',
@@ -95,16 +84,8 @@ export class AuthService {
     }
   }
 
-  // // update Refresh token
-  // async updateRefreshToken(email: string, refresh: string){
-  //   const updateUserDto = new UpdateAccountUserDto();
-  //   updateUserDto.email = email;
-  //   updateUserDto.refresh_token = refresh;
-  //   await this.accountUserService.updateAccountUser(email, updateUserDto);
-  // }
-
   // hàm random password
-  randomPassword(length: number, base: string){
+  private randomPassword(length: number, base: string){
     //const baseString = "0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
     const getRandomInt = (min: number, max: number) => {
       return Math.floor(Math.random() * (max - min)) + min;
@@ -118,8 +99,6 @@ export class AuthService {
     return result;
   }
   
-
-
   /**
    *  ___________________________________________________________________________________
    *  Controller có -> Service có!
@@ -127,7 +106,7 @@ export class AuthService {
    */
 
   // đăng kí tài khoản -> Done!
-  async registerUser(input: CreateAccountUserDto): Promise<AccessTokenDto | object> {
+  public async registerUser(input: CreateAccountUserDto): Promise<AccessTokenDto | object> {
     const checkUser = await this.accountUserService.getAccountUserByEmail(input.email);
     if (checkUser) {
       // throw new HttpException(
@@ -148,7 +127,8 @@ export class AuthService {
     });
 
     const update = new UpdateAccountUserDto(
-      newUser.email,input.password,
+      newUser.email,
+      newUser.password,
       tokens.refresh_token,
       null
     );
@@ -156,12 +136,12 @@ export class AuthService {
     await this.accountUserService.updateAccountUser(newUser.email, update)
     console.log(newUser);
 
-    const accessTokenDto = new AccessTokenDto(tokens.access_token);
-    return accessTokenDto;
+    //const accessTokenDto = new AccessTokenDto(tokens.access_token);
+    return tokens;
   }
 
   // đăng nhập 
-  async login(input: LoginUserDto): Promise<AccessTokenDto | object> {
+  public async login(input: LoginUserDto): Promise<Tokens | object> {
     // const checkUser = await this.accountUserService.CheckEmailExsit(input.email);
     const findUser = await this.accountUserService.getAccountUserByEmail(input.email);
     if (findUser){
@@ -196,12 +176,12 @@ export class AuthService {
     findUser.refresh_token = tokens.refresh_token;
     await this.accountUserService.updateAccountUser(findUser.email, findUser);
 
-    const accessTokenDto = new AccessTokenDto(tokens.access_token);
-    return accessTokenDto;
+    //const accessTokenDto = new AccessTokenDto(tokens.access_token);
+    return tokens;
   }
 
-  // Done!
-  async logout(email: string): Promise<boolean> {
+  // logout -> refresh token = null -> delete cache
+  public async logout(email: string): Promise<boolean> {
     const checkUser = await this.accountUserService.getAccountUserByEmail(email);
     checkUser.refresh_token = null;
     await this.accountUserService.updateAccountUser(checkUser.email, checkUser);
@@ -209,45 +189,26 @@ export class AuthService {
     return true;
   }
 
-  // async refreshTokenold(email: string, rt: string): Promise<Tokens> {
-  //   const checkUser = await this.accountUserService.getAccountUserByEmail(email);
-  //   if (!checkUser || !checkUser.refresh_token) throw new ForbiddenException('Access Denied');
-  //   const refreshMatches = this.jwtService.decode(rt);
-  //   console.log("refreshToken func, refreshMatches: ", refreshMatches);
-  //   if (!refreshMatches) throw new ForbiddenException('Access Denied');
-  //   const tokens = await this.getTokens({email: checkUser.email, role: checkUser.role});
-  //   await this.updateRefreshToken(checkUser.email, tokens.refresh_token);
-  //   console.log("refreshToken func, tokens ", tokens);
-  //   return tokens;
-  // }
-
-  async refreshToken(email: string): Promise<AccessTokenDto | object> {// refreshDto: RefreshDto
+  async refreshToken(refresh_token: string): Promise<Tokens | object> {// refreshDto: RefreshDto
     // check cái access token ở trong cache - 
-    const checkUser = await this.accountUserService.getAccountUserByEmail(email);
-    if (!checkUser || !checkUser.refresh_token) {
-      //throw new ForbiddenException('Access Denied');
-      return {message: 'Access Denied!'}
+    try {
+      const refreshMatches = this.jwtService.decode(refresh_token);
+      console.log(refreshMatches)
+       if (!refreshMatches) return {message: 'refresh token invalid!'}
+       else{
+          const checkUser = await this.accountUserService.getAccountUserByEmail(refreshMatches['email']);
+          if (!checkUser || !checkUser.refresh_token) return {message: 'Please Login again!'}
+          const tokens = await this.getTokens({email: checkUser.email, role: checkUser.role});
+          checkUser.refresh_token = tokens.refresh_token;
+          await this.accountUserService.updateAccountUser(checkUser.email, checkUser);
+          return tokens;
+        }
+    } catch (error) {
+      return {message : "decode fail"}
     }
-    const refreshMatches = this.jwtService.decode(checkUser.refresh_token);
-    if (!refreshMatches){
-      // throw new ForbiddenException('Access Denied');
-      return {message: 'Access Denied!'}
-    } 
-    const tokens = await this.getTokens({email: checkUser.email, role: checkUser.role});
-    checkUser.refresh_token = tokens.refresh_token;
-    await this.accountUserService.updateAccountUser(checkUser.email, checkUser);
-    
-    const accessTokenDto = new AccessTokenDto(tokens.access_token);
-    return accessTokenDto;
   }
 
-
-  
-
-
   async forgetPassword(email: string): Promise<AccessTokenDto | object> {
-    //throw new Error('Method not implemented.');
-    
     const checkUser = await this.accountUserService.getAccountUserByEmail(email);
     if (!checkUser){
       // return 'Email không tồn tại!'
@@ -272,7 +233,6 @@ export class AuthService {
       );
 
       await this.accountUserService.updateAccountUser(checkUser.email, update)
-      
 
       // const transporter = nodemailer.createTransport({
       //   service: 'gmail',
@@ -302,11 +262,11 @@ export class AuthService {
     }
   }
 
+  // change Password: email, currentPass, newPass 
   async changePassword(
     email: string, 
     input: ChangePasswordDto
   ): Promise<AccessTokenDto | object>{
-
     const findUser = await this.accountUserService.getAccountUserByEmail(email);
     if (findUser){
       const checkPass = await this.comparePassword(input.currentPass, findUser.password);
@@ -319,18 +279,16 @@ export class AuthService {
       return {message: 'email or Password Invalid!'}
     }
 
-    input.newPass = await bcrypt.hash(input.newPass, 12);
+    findUser.password = await bcrypt.hash(input.newPass, 12);
 
     const tokens = await this.getTokens({email: email, role: findUser.role});
 
-    findUser.password = input.newPass;
+    // findUser.password = input.newPass;
 
     await this.accountUserService.updateAccountUser(findUser.email, findUser);
     
     const accessTokenDto = new AccessTokenDto(tokens.access_token);
     return accessTokenDto;
-
-    return ;
   }
 
   async ShowAccountList(){

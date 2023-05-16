@@ -31,6 +31,21 @@ export class ProfileDocumentService {
         }
     }
 
+
+    //  find profile same as not fine -> đánh index for profile
+    async getProfileByEmail(email: string){
+        const profile = await this.profileModel.findOne({ email: email});
+        return profile;
+    }
+
+    async isCreatedProfile(email: string){
+        const profile = await this.profileModel.findOne({ email: email});
+        if(profile && Object.keys(profile.profileDetail).length === 0){
+            return false;
+        }
+        return true;
+    }
+
     async CreateProfile(profileDto: ProfileDocumentDto) {
 
         // check email: email is exist in Database? -> not valid

@@ -13,27 +13,39 @@ import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { KafkaModule } from 'src/modules/kafka/kafka.module';
 import { AuthApiGatewayService } from './auth.api.service';
+import { ProfileDocumentModule } from '../profile-document/profileDocument.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Profile, ProfileSchema } from '../profile-document/profileDocument.entity';
+import { ProfileDocumentService } from '../profile-document/profileDocument.service';
+import { InformationUserEntity } from '../infor-users/inforUser.entity';
+import { InformationUserService } from '../infor-users/inforUser.service';
+import { ProfileUserService } from '../profile-users/profileUser.service';
+import { ProfileUserEntity } from '../profile-users/profileUser.entity';
 
 @Module({
       imports: [
-       
         JwtModule.register({
           secret: 'JWT_SECRET_KEY',
           signOptions: { expiresIn: 60},
-        }),PassportModule,
-        TypeOrmModule.forFeature([AccountUserEntity]),
-        //KafkaModule,
+        }),
+        PassportModule,
+        TypeOrmModule.forFeature([AccountUserEntity, InformationUserEntity, ProfileUserEntity]),
+        KafkaModule,
+        MongooseModule.forFeature([{ name: Profile.name, schema: ProfileSchema }])
         //AccountUserModule,  
+        //ProfileDocumentModule
       ],
       controllers: [AuthController],
-      providers: [AuthService, AccountUserService,
-        JsonWebTokenStrategy, RefreshJWTStrategy, 
+      providers: [
+        AuthService, 
+        AccountUserService,
+        InformationUserService,
+        ProfileUserService,
+        JsonWebTokenStrategy, 
+        RefreshJWTStrategy, 
         AuthenticationGuard,
-        {
-          provide: APP_GUARD,
-          useClass: RolesGuard,
-        }, 
-        //AuthApiGatewayService
+        AuthApiGatewayService,
+        ProfileDocumentService
       ]
 })
 export class AuthModule {}

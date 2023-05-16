@@ -3,16 +3,23 @@ import { Injectable } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ProducerService } from 'src/modules/kafka/producer.service';
 import { ConsumerService } from 'src/modules/kafka/consumer.service';
+import { EventPattern, MessagePattern } from '@nestjs/microservices';
+import { AccountUserService } from '../account-users/accountUser.service';
+import { ProfileDocumentService } from '../profile-document/profileDocument.service';
 
 @Injectable()
 export class AuthApiGatewayService {
   constructor(
     private producerService: ProducerService,
     private consumerService: ConsumerService,
-    private authService: AuthService
+    private authService: AuthService,
+    private readonly accountUserService: AccountUserService,
+    private readonly profildocumentService: ProfileDocumentService,
   ){}
-    
-  async waitProducer(groupId: string, topic: string){
+  
+
+  //   login
+  async waitProducerForLogin(groupId: string, topic: string){
     this.consumerService.consume(   
       groupId,
       {topic: topic},
@@ -20,12 +27,143 @@ export class AuthApiGatewayService {
         eachMessage: async ({ message }) => {
           const input = JSON.parse(message.value.toString());
           //handle Login with Auth Service
-          const result: object = await this.authService.login(input);
-          await this.producerService.sendMessage('auth-api-login-res', result, 6000);
+          const result = await this.authService.login(input);
+          console.log("send the result: ", result);
+          await this.producerService.sendMessage('auth-api-login-res', result, 60000);
         }
       }
     )
   }
+
+
+  //  register
+  async waitProducerForRegister(groupId: string, topic: string){
+    this.consumerService.consume(   
+      groupId,
+      {topic: topic},
+      {
+        eachMessage: async ({ message }) => {
+          const input = JSON.parse(message.value.toString());
+          const result = await this.authService.registerUser(input);
+          console.log("send the result: ", result);
+          await this.producerService.sendMessage('auth-api-register-res', result, 60000);
+        }
+      }
+    )
+  }
+
+
+  @EventPattern('api-auth-logout') // put in middleware
+  handleLogout(data: any){
+    console.log('api-auth-logout');
+    this.authService.logout(data);
+  }
+
+
+   // create Information
+  async handleCreateInformationUser(groupId: string, topic: string){
+    this.consumerService.consume(   
+      groupId,
+      {topic: topic},
+      {
+        eachMessage: async ({ message }) => {
+          const input = JSON.parse(message.value.toString());
+          //handle Login with Auth Service
+          const result = await this.profildocumentService.CreateProfile(input); //profile ~ infor
+          console.log("send the result: ", result);
+          await this.producerService.sendMessage('create-infor-res', result, 60000);
+        }
+      }
+    )
+  }
+
+
+  // create Profile
+  async handleCreateProfileUser(groupId: string, topic: string){
+    this.consumerService.consume(   
+      groupId,
+      {topic: topic},
+      {
+        eachMessage: async ({ message }) => {
+          const input = JSON.parse(message.value.toString());
+          const result = await this.profildocumentService.CreateProfileDetail(input['email'], input); //profile ~ infor
+          console.log("send the result: ", result);
+          await this.producerService.sendMessage('create-profile-res', result, 60000);
+        }
+      }
+    )
+  }
+
+
+  // get Users
+  async handleGetUsers(groupId: string, topic: string){
+    this.consumerService.consume(   
+      groupId,
+      {topic: topic},
+      {
+        eachMessage: async ({ message }) => {
+          const input = JSON.parse(message.value.toString());
+          console.log(input);
+          const result = await this.accountUserService.getAccountUsers();
+          console.log("send the result: ", result);
+          await this.producerService.sendMessage('getUsers-res', result, 60000);
+        }
+      }
+    )
+  }
+
+
+  // event get name of freelancer
+  @MessagePattern('get-freelancer-name')
+  async getName(email: any){
+    //  get Email -> check
+    /**
+     * 1. email is invalid?
+     * 2. check created profile?
+     * 3. 
+     */
+    const findUser = await this.accountUserService.getAccountUserByEmail(email);
+    if (findUser){
+      const check = await this.profildocumentService.isCreatedProfile(email);
+      if(!check) return "Fail"
+      const freelancer = await this.profildocumentService.getProfileByEmail(email);
+      const fullname = freelancer.first_name + ' ' + freelancer.last_name;
+      return fullname;
+    }
+    return "Fail"
+  }
+
+
+
+  async onModuleInit() {
+    //this.waitProducerForLogin('auth-service', 'api-auth-login-req');
+    await this.waitProducerForRegister('auth-service', 'api-auth-register-req')
+    // await this.handleCreateInformationUser('auth-service', 'create-infor-req');
+    // await this.handleCreateProfileUser('auth-service', 'create-profile-req');
+    // await this.handleGetUsers('auth-service', 'getUsers-req')
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // async handleLogin(){
   //   const message : any =  await this.consumerService.handleMessage<any>('auth-service', 'api-auth-login-req');
@@ -53,19 +191,6 @@ export class AuthApiGatewayService {
   //     }
   //   )
   // }
-
-  async onModuleInit() {
-    await this.waitProducer('auth-servic', 'api-auth-login-req')
-    //await this.handleLogin();
-    // await this.handleRegister();
-    // await this.handleLogout();
-    // await this.handleRefreshToken();
-    // await this.handleForgetPassword();
-  }
-
-}
-
-
 
   // async handleLogin(){
   //   this.consumerService.consume(   
