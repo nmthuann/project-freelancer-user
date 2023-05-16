@@ -7,18 +7,23 @@ import { Payload } from 'src/common/bases/types/payload.type';
 
 @Injectable()
 export class JsonWebTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor() {
-        super({
-          jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-          ignoreExpiration: false,
-          secretOrKey: 'JWT_SECRET_KEY',
-        });
-      }
+  constructor() 
+  {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: 'JWT_SECRET_KEY',
+      });
+  }
 
-      validate(payload: Payload) {
-        console.log('validate - JsonWebTokenStrategy: ', payload);
-        return payload ;
-      } 
-    }
-// { email: payload.email, 
-//           role: payload.role }
+  validate(payload: Payload) {
+    console.log('validate - JsonWebTokenStrategy: ', payload);
+      return payload ;
+  } 
+}
+
+
+// { 
+//  email: payload.email, 
+//  role: payload.role 
+// }

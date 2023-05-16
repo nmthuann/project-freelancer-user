@@ -17,7 +17,7 @@ export class ProfileDocumentController {
   @Post('create-profile-detail/:email')
   async createProfileDetail(@Param('email') email: string, @Body() profileDetailDto: CreateProfileDetailDto){
     console.log(email, "Create ProfileDetail Controller!")
-    return await this.profileDocumentService.CreateProfileDetail(email, profileDetailDto)
+    return await this.profileDocumentService.CreateProfileDetail(email, profileDetailDto);
   }
 
   @Get('profile-list')

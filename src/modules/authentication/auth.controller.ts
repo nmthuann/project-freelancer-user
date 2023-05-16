@@ -1,6 +1,6 @@
 import { Body, Controller, HttpException, HttpStatus, 
-  Post, UseGuards, Request, Get, Param, UsePipes,
-   HttpCode, Req } from '@nestjs/common';
+  Post, UseGuards,  Get, Param, UsePipes,
+   HttpCode, Header, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAccountUserDto } from '../account-users/account-user-dto/create-accountUser.dto';
 import { AuthenticationGuard } from 'src/common/guards/authentication.guard';
@@ -20,6 +20,8 @@ import { Payload } from 'src/common/bases/types/payload.type';
 import { GetCurrentRoleUser } from 'src/common/decorators/get-currentRoleUser.decorator';
 import { AccessTokenDto } from './auth-dto/accessToken.dto';
 import { ChangePasswordDto } from './auth-dto/changePass.dto';
+import { EventPattern } from '@nestjs/microservices';
+//import { Request } from 'express';
 
 /**
  * Authentication/ 
@@ -39,43 +41,48 @@ export class AuthController {
 
  //fucntion register user
  
-  @Public()
+  //@Public()
   @Post('register') // check login hoặc chưa
   @UsePipes(new TransformPipe(), new ValidatorPipe())
   @HttpCode(HttpStatus.CREATED)
-  async registerUser(@Body() input: CreateAccountUserDto): Promise<AccessTokenDto | object> {
+  async registerUser(@Body() input: CreateAccountUserDto): Promise<Tokens | object> {
     return await this.authService.registerUser(input);
   }
   
   //handle login
-  @Public()
+  //@Public()
   @Post('login')
   @UsePipes(new TransformPipe(), new ValidatorPipe())
-  async login(@Body() loginDto: LoginUserDto): Promise<AccessTokenDto | object> {
+  async login(@Body() loginDto: LoginUserDto): Promise<Tokens | object> {
     console.log(loginDto, "Đã vừa đăng nhập!")
     return await this.authService.login(loginDto);
   }
 
-  @UseGuards(AuthenticationGuard)
+  //@UseGuards(AuthenticationGuard)
   @Post('logout')
-  @HttpCode(HttpStatus.OK)
+  // @HttpCode(HttpStatus.OK)
   async logout(@GetCurrentEmailUser() email: string): Promise<boolean>{
     return await this.authService.logout(email);
   }
 
-  @UseGuards(AuthenticationGuard)
+  //@UseGuards(AuthenticationGuard)
   @Post('forget-password')
-  async forgetPassword(@GetCurrentEmailUser() email: string): Promise<AccessTokenDto | object>{
+  async forgetPassword(@GetCurrentEmailUser() email: string): Promise<Tokens | object>{
     return await this.authService.forgetPassword(email);
   }
 
-  @UseGuards(AuthenticationGuard)
+  //@UseGuards(RefreshGuard)
   @Post('refresh-token')
-  async refreshToken(@GetCurrentEmailUser() email: string): Promise<AccessTokenDto | object>{
-    return await this.authService.refreshToken(email);
+  async refreshToken(@Request() req: any): Promise<Tokens | object >{
+    console.log(req)
+    const refreshToken = req
+            ?.get('authorization') // check xem a hay A
+            ?.replace('Bearer', '')
+            .trim();
+    return await this.authService.refreshToken(refreshToken);
   }
 
-  @UseGuards(AuthenticationGuard)
+  //@UseGuards(AuthenticationGuard)
   @Post('change-password')
   async changePassword(
   @GetCurrentEmailUser() email: string,
@@ -84,7 +91,7 @@ export class AuthController {
     return await this.authService.changePassword(email, input);
   }
 
-  @UseGuards(AuthenticationGuard)
+  //@UseGuards(AuthenticationGuard)
   @Post('show-list')
   //@UseGuards(RolesGuard)
   //@Roles(Role.Admin)
@@ -95,20 +102,8 @@ export class AuthController {
     //console.log('Thuan sao ăn gi cute z !!! =)))')
     return await this.authService.ShowAccountList();
   }
+
+
+
 }
 
-
-// @Public()
-  // @UseGuards(RefreshGuard) // để ngăn ng khác thay đổi rf
-  // @Post('refresh')
-  // @HttpCode(HttpStatus.OK)
-  // refreshToken(
-  //   @GetCurrentEmailUser() email: string,
-  //   @GetCurrentUser('refreshToken') refreshToken: string,
-  // ): Promise<Tokens> {
-  //   console.log({
-  //     email,
-  //     refreshToken
-  //   })
-  //   return this.authService.refreshTokenold(email, refreshToken);
-  // }  

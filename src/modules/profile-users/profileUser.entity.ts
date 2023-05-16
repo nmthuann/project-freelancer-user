@@ -19,8 +19,8 @@ export class ProfileUserEntity extends BaseEntity {
     @Column({default: "new seller"})
     level: string;
 
-     @OneToOne(() =>InformationUserEntity, (infor) => infor.profile)
-    @JoinColumn()
+    @OneToOne(() =>InformationUserEntity, (infor) => infor.profile)
+    @JoinColumn() // fix here
     infor: InformationUserEntity;
 
 }

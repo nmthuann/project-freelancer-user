@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -15,24 +15,52 @@ import { ProfileUserlModule } from './modules/profile-users/profileUser.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProfileDocumentModule } from './modules/profile-document/profileDocument.module';
 
+
 @Module({
-  imports: [TypeOrmModule.forRoot(
-      { 
-        type: 'mysql',
-        host: 'localhost',
-        port: 3306,
-        username: 'root',
-        password: null,
-        database: 'freelancerproject-user',
-        entities: [AccountUserEntity, InformationUserEntity, ProfileUserEntity], //InformationUserEntity, ProfileUserEntity
-        synchronize: false// fix: false -> migration
-      }),  AuthModule, 
-      AccountUserModule, InformationUserlModule, ProfileUserlModule,
-      MongooseModule.forRoot('mongodb://127.0.0.1:27017/UserFiver'), ProfileDocumentModule,
-     ],
+  imports: [
+    TypeOrmModule.forRoot({ 
+      type: 'mysql',
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT),
+      username: process.env.DB_USERNAME,
+      password: null,
+      database: process.env.DB_DATABASE_NAME,
+      entities: [
+        AccountUserEntity, 
+        InformationUserEntity, 
+        ProfileUserEntity
+      ],
+      synchronize: false// fix: false -> migration
+    }),  
+      AuthModule, 
+      AccountUserModule, 
+      InformationUserlModule, 
+      ProfileUserlModule,
+      MongooseModule.forRoot('mongodb://127.0.0.1:27017/UserFiver'), 
+      ProfileDocumentModule,
+    ],
   controllers: [AppController],
-  providers: [AppService,],
+  providers: [AppService],
 })
 
-export class AppModule  {// implements NestModule
+export default class AppModule {
+
 }
+
+
+
+
+
+
+// implements NestModule {
+  //   configure(consumer: MiddlewareConsumer) {
+  //   consumer
+  //       .apply(AuthenticationMiddleware)
+  //       .exclude(
+  //       { path: 'api/auth/login', method: RequestMethod.POST },
+  //       { path: 'api/auth/register', method: RequestMethod.POST },
+  //       //{ path: 'auth/refresh', method: RequestMethod.POST },
+  //       //'auth/(.*)',
+  //   )
+  //       .forRoutes(ApiGatewayAuthController);
+  // }

@@ -31,7 +31,7 @@ export class InformationUserEntity extends BaseEntity {
     
 
     @OneToOne(() => AccountUserEntity,  (account) =>  account.infor)
-    @JoinColumn()
+    @JoinColumn() // fix here
     account: AccountUserEntity;
 
 
