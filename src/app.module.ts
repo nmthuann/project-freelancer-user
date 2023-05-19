@@ -14,10 +14,26 @@ import { InformationUserlModule } from './modules/infor-users/inforUser.module';
 import { ProfileUserlModule } from './modules/profile-users/profileUser.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProfileDocumentModule } from './modules/profile-document/profileDocument.module';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 
 @Module({
   imports: [
+      ClientsModule.register([
+      {
+        name: 'POST_SERVICE',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            clientId: 'post-consumer',
+            brokers: ['localhost:9092'],
+          },
+          consumer: {
+            groupId: 'post-service'
+          }
+        }
+      },
+    ]),
     TypeOrmModule.forRoot({ 
       type: 'mysql',
       host: process.env.DB_HOST,

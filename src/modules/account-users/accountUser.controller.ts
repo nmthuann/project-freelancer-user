@@ -41,6 +41,8 @@ export class AccountUserController{
         console.log(this.accountUserService.deleteAccountUserByEmail(email));
     }
 
+
+    
     @Get('AccountUsers')
     async getAccountUsers(): Promise<AccountUserEntity[]> {
         return await this.accountUserService.getAccountUsers();
