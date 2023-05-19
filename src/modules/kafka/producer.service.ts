@@ -9,7 +9,7 @@ import { Kafka, Producer, ProducerRecord } from 'kafkajs';
 export class ProducerService  { //implements OnModuleInit, OnApplicationShutdown
 
   private readonly kafka = new Kafka({
-    clientId: 'auth-consumer',
+    clientId: 'auth-producer',
     brokers: ['localhost:9092'],
   });
 

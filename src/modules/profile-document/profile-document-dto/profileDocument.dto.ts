@@ -3,8 +3,8 @@ import { CreateProfileDetailDto } from "./create-profileDetail.dto";
 
 export class ProfileDocumentDto{
 
-    @IsEmail()
-    email: string;
+    // @IsEmail()
+    // email: string;
 
     @IsNotEmpty()
     first_name: string;

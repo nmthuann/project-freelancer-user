@@ -46,16 +46,17 @@ export class ProfileDocumentService {
         return true;
     }
 
-    async CreateProfile(profileDto: ProfileDocumentDto) {
+    async CreateInformation(email:string, profileDto: ProfileDocumentDto) {
 
         // check email: email is exist in Database? -> not valid
-        const checkEmail = await this.accountUserService.getAccountUserByEmail(profileDto.email);
+        const checkEmail = await this.accountUserService.getAccountUserByEmail(email);
         if (!checkEmail) return "email khong hop le";
         else{
            
 
             // get Infor id in other to create or update?
-            const getInforId: number = (await this.informationUserService.getInforIdByEmail(profileDto.email));
+            const getInforId: number = 
+            (await this.informationUserService.getInforIdByEmail(email));
             console.log(getInforId)
             if (!getInforId){ // getInforId == null
                  const createdProfile = new this.profileModel();
@@ -75,7 +76,7 @@ export class ProfileDocumentService {
                 // create Information - MySQL
                 await this.informationUserService.createInformationUser(inforNew);
 
-                createdProfile.email = profileDto.email ;
+                createdProfile.email = email ;
                 createdProfile.first_name = profileDto.first_name ;
                 createdProfile.last_name = profileDto.last_name ;
                 createdProfile.gender = profileDto.gender ;
@@ -101,20 +102,21 @@ export class ProfileDocumentService {
                 updateInfor.phone = profileDto.phone;
                 updateInfor.address = profileDto.address ;
                 updateInfor.education = profileDto.education ;
-                const test = await this.informationUserService.updateInformationUserById(getInforId, updateInfor);
+                const test = 
+                await this.informationUserService.updateInformationUserById(getInforId, updateInfor);
                 console.log("updaInfor: ", test )
 
                 const test2 = await this.profileModel.updateOne(
-                    (await this.profileModel.findOne({ email: profileDto.email })), 
+                    (await this.profileModel.findOne({ email: email })), 
                     updateInfor
                 );
 
-                return await this.profileModel.findOne({ email: profileDto.email });
+                return await this.profileModel.findOne({ email: email });
             }
         }
     }
 
-    async CreateProfileDetail(email:string, profileDetailDto: CreateProfileDetailDto) {
+    async CreateProfile(email:string, profileDetailDto: CreateProfileDetailDto) {
         // check email
         const checkEmail = await this.profileModel.findOne({
             email: email
@@ -132,12 +134,14 @@ export class ProfileDocumentService {
                 else{ 
                     //new create
                     const newProfileMySql = new ProfileUserDto();
-                    newProfileMySql.infor = await this.informationUserService.getInformationUserById(getInforId);
+                    newProfileMySql.infor = 
+                    await this.informationUserService.getInformationUserById(getInforId);
                     newProfileMySql.avatar = profileDetailDto.avatar;
                     newProfileMySql.my_skill = profileDetailDto.mySkill;
                     newProfileMySql.occupation = profileDetailDto.occupation;
                     
-                    const test = await this.profileUserService.createProfileUser(newProfileMySql);
+                    const test = 
+                    await this.profileUserService.createProfileUser(newProfileMySql);
                     console.log("checktest - MySQL: ", test);
 
                     await this.profileModel.findOneAndUpdate({email:email}, 
@@ -167,4 +171,17 @@ export class ProfileDocumentService {
             }
         }
     }
+
+
+    async getFreelancerName(get_user: string){
+    const findUser = await this.accountUserService.getAccountUserByEmail(get_user);
+    if (findUser){
+      const check = await this.isCreatedProfile(get_user);
+      if(!check) return "Fail"
+      const freelancer = await this.getProfileByEmail(get_user);
+      const fullname = freelancer.first_name + ' ' + freelancer.last_name;
+      return fullname;
+    }
+    return "Fail"
+  }
 }

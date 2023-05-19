@@ -194,17 +194,17 @@ export class AuthService {
     try {
       const refreshMatches = this.jwtService.decode(refresh_token);
       console.log(refreshMatches)
-       if (!refreshMatches) return {message: 'refresh token invalid!'}
+       if (!refreshMatches) return null //{message: 'refresh token invalid!'}
        else{
           const checkUser = await this.accountUserService.getAccountUserByEmail(refreshMatches['email']);
-          if (!checkUser || !checkUser.refresh_token) return {message: 'Please Login again!'}
+          if (!checkUser || !checkUser.refresh_token) return null //{message: 'Please Login again!'}
           const tokens = await this.getTokens({email: checkUser.email, role: checkUser.role});
           checkUser.refresh_token = tokens.refresh_token;
           await this.accountUserService.updateAccountUser(checkUser.email, checkUser);
           return tokens;
         }
     } catch (error) {
-      return {message : "decode fail"}
+      return null //{message : "decode fail"}
     }
   }
 
@@ -294,4 +294,18 @@ export class AuthService {
   async ShowAccountList(){
     return await this.accountUserService.getAccountUsers();
   }
+
+  
+
 }
+
+//   const findUser = await this.accountUserService.getAccountUserByEmail(email);
+  //   if (findUser){
+  //     const check = await this.profildocumentService.isCreatedProfile(email);
+  //     if(!check) return "Fail"
+  //     const freelancer = await this.profildocumentService.getProfileByEmail(email);
+  //     const fullname = freelancer.first_name + ' ' + freelancer.last_name;
+  //     return fullname;
+  //   }
+  //   return "Fail"
+  // }
