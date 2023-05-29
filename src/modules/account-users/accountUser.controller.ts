@@ -1,15 +1,9 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Req, UseGuards, UsePipes } from "@nestjs/common";
 import { Observable } from "rxjs";
 import { AccountUserService } from "./accountUser.service";
-import { AccountUserDto } from "./account-user-dto/accountUser.dto";
-import { LoginUserDto } from "./account-user-dto/login-accountUser.dto";
 import { CreateAccountUserDto } from "./account-user-dto/create-accountUser.dto";
 import { ValidatorPipe } from "src/common/pipes/validator.pipe";
-import { AuthService } from "../authentication/auth.service";
-import { Roles } from "src/common/decorators/roles.decorator";
-import { Role } from "src/common/bases/enums/role.enum";
 import { TransformPipe } from "src/common/pipes/transform.pipe";
-import { UpdateRoleInAccountUserDto } from "./account-user-dto/updateRole-accoutUser.dto";
 import { AccountUserEntity } from "./accountUser.entity";
 
 @Controller('account-user')
@@ -20,7 +14,6 @@ export class AccountUserController{
     @Post('create')
     @UsePipes(new ValidatorPipe(), new TransformPipe())
     async createAccountUser(@Body() createdUserDto: CreateAccountUserDto) : Promise<CreateAccountUserDto>{  
-        console.log('deo de')
         return await this.accountUserService.createAccountUser(createdUserDto);
     }
     
@@ -40,8 +33,6 @@ export class AccountUserController{
     async deleteAccountUserByEmail(@Param('email') email: string){
         console.log(this.accountUserService.deleteAccountUserByEmail(email));
     }
-
-
     
     @Get('AccountUsers')
     async getAccountUsers(): Promise<AccountUserEntity[]> {

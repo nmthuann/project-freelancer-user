@@ -36,11 +36,11 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     ]),
     TypeOrmModule.forRoot({ 
       type: 'mysql',
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT),
-      username: process.env.DB_USERNAME,
+      host: 'localhost',
+      port: 3306, // parseInt(process.env.DB_PORT)
+      username: 'root',// process.env.DB_USERNAME
       password: null,
-      database: process.env.DB_DATABASE_NAME,
+      database: 'freelancerproject-user',//  process.env.DB_DATABASE_NAME
       entities: [
         AccountUserEntity, 
         InformationUserEntity, 

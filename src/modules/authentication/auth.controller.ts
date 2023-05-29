@@ -74,7 +74,7 @@ export class AuthController  {
   }
 
 
-  @UseGuards(AdminRoleGuard)
+  // @UseGuards(AdminRoleGuard)
   @Get('show-list')
   async ShowAccountList(){
     // if (role == 'user') 
