@@ -3,18 +3,12 @@ import { ProfileDocumentService } from './profileDocument.service';
 import { ProfileDocumentDto } from './profile-document-dto/profileDocument.dto';
 import { CreateProfileDetailDto } from './profile-document-dto/create-profileDetail.dto';
 import { UserRoleGuard } from 'src/common/guards/user.role.guard';
-import { MessagePattern, Payload } from '@nestjs/microservices';
-import { Consumer, Kafka } from 'kafkajs';
+import { AdminRoleGuard } from 'src/common/guards/admin.role.guard';
+import { RoleGuard } from 'src/common/guards/role.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 
 @Controller('profile-document')
-export class ProfileDocumentController{//  implements OnModuleInit 
-
-  // private readonly kafka = new Kafka({
-  //   brokers: ['localhost:9092'],
-  //   //onnectionTimeout: 6000,
-  // });
-  // private readonly consumer: Consumer = this.kafka.consumer({ groupId: 'auth-service' });
-
+export class ProfileDocumentController{
 
   constructor(
     private readonly profileDocumentService: ProfileDocumentService
@@ -40,10 +34,31 @@ export class ProfileDocumentController{//  implements OnModuleInit
     return await this.profileDocumentService.CreateProfile(email, profileDetailDto);
   }
 
-  @Get('profile-list')
+
+  @UseGuards(AdminRoleGuard)
+  @Get('get-profile-list')
   async getProfileList(){
-    return await this.profileDocumentService.getProfiles()
+    return await this.profileDocumentService.getProfiles();
   }
+
+
+  @UseGuards(RoleGuard)
+  @Get('get-user') 
+  async getProfileByEmail(@Request() req: any){
+    const email = req['email'];
+    return await this.profileDocumentService.getProfileByEmail(email);
+  }
+
+
+  // @UseGuards(RoleGuard)
+  // @Get('get-user') 
+  // async getProfileByEmailUser(@Param('email') email: string){
+  //   return await this.profileDocumentService.getProfileByEmail(email);
+  // }
+
+}
+
+
 
   // @MessagePattern('get_user')
   // handleGetUser(@Payload() get_user: string) {
@@ -53,5 +68,3 @@ export class ProfileDocumentController{//  implements OnModuleInit
   //  async onModuleInit() {
   //   await this.consumer.connect();
   // }
-
-}

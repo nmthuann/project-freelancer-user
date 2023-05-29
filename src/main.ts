@@ -9,7 +9,7 @@ import * as dotenv from 'dotenv';
 
 async function bootstrap() {
   dotenv.config();
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { cors: true });
   app.setGlobalPrefix('user'); // tiền tố api
   //app.useGlobalPipes(new ValidationPipe());
   console.log('UserModule connect successfully .......  !!!')

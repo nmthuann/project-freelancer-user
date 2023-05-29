@@ -21,7 +21,7 @@ export class RoleGuard implements CanActivate {
       if (isPublic) return true;
       else{
         const request = context.switchToHttp().getRequest();
-        console.log(request);
+        //console.log(request);
         const payload = request['user'];
         if (!payload){
           throw new ForbiddenException('Access denied'); 

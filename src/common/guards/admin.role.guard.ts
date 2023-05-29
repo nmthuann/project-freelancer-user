@@ -23,7 +23,7 @@ export class AdminRoleGuard implements CanActivate {
       if (isPublic) return true;
       else{
         const request = context.switchToHttp().getRequest();
-        console.log(request);
+        // console.log(request);
         const payload = request['user'];
         if (payload['role'] != Role.Admin){
           throw new ForbiddenException('Access denied - You are not Admin'); 
