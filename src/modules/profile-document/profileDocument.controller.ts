@@ -6,6 +6,7 @@ import { UserRoleGuard } from 'src/common/guards/user.role.guard';
 import { AdminRoleGuard } from 'src/common/guards/admin.role.guard';
 import { RoleGuard } from 'src/common/guards/role.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
+import { CreateProfileDocumentDto } from './profile-document-dto/create-profileDocument.dto';
 
 @Controller('profile-document')
 export class ProfileDocumentController{
@@ -47,6 +48,13 @@ export class ProfileDocumentController{
   async getProfileByEmail(@Request() req: any){
     const email = req['email'];
     return await this.profileDocumentService.getProfileByEmail(email);
+  }
+
+
+  @Get('get-freelancer/:email') 
+  async getFreelancerProfileByEmail(@Param('email') email: string): Promise<ProfileDocumentDto>{
+    // const email = req['email'];
+    return await this.profileDocumentService.getFreelancerProfileByEmail(email);
   }
 
 

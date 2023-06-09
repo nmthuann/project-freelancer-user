@@ -21,7 +21,7 @@ export class AuthenticationMiddleware implements NestMiddleware {
       );
     } 
     else{
-      const token: string = req.get('authorization').replace('Bearer', '').trim();
+      const token: string = req.get('Authorization').replace('Bearer', '').trim();
       try {
         await this.jwtService.verifyAsync(
           token,
@@ -34,7 +34,7 @@ export class AuthenticationMiddleware implements NestMiddleware {
         next();
       } catch (error) {
          res.status(HttpStatus.FORBIDDEN)
-          .json({ message: 'Invalid or expired token' });
+          .json({ message: 'User -> Invalid or expired token' });
       }
     }
   }

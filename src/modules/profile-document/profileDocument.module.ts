@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Profile, ProfileSchema } from './profileDocument.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -51,6 +51,7 @@ import { ProducerService } from '../kafka/producer.service';
 export class ProfileDocumentModule implements NestModule{
     configure(consumer: MiddlewareConsumer) {
         consumer.apply(AuthenticationMiddleware)
+        .exclude({ path: 'profile-document/get-freelancer/:email', method: RequestMethod.GET },)
         .forRoutes(ProfileDocumentController);
     }
 }

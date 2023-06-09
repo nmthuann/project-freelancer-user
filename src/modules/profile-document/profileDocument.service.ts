@@ -11,6 +11,7 @@ import { CreateInformationUserDto } from '../infor-users/infor-user-dto/create-i
 import { CreateProfileDetailDto } from './profile-document-dto/create-profileDetail.dto';
 import { UpdateInformationUserDto } from '../infor-users/infor-user-dto/update-inforUser.dto';
 import { ProfileUserDto } from '../profile-users/profile-user-dto/profileUser.dto';
+import { CreateProfileDocumentDto } from './profile-document-dto/create-profileDocument.dto';
 
 @Injectable()
 export class ProfileDocumentService {
@@ -33,8 +34,14 @@ export class ProfileDocumentService {
 
 
     //  find profile same as not fine -> đánh index for profile
-    async getProfileByEmail(email: string){
+    async getProfileByEmail(email: string): Promise<ProfileDocumentDto>{
         const profile = await this.profileModel.findOne({ email: email});
+        return profile;
+    }
+
+    async getFreelancerProfileByEmail(email: string): Promise<ProfileDocumentDto>{
+        const profile = await this.profileModel.findOne({ email: email});
+        console.log("getFreelancerProfileByEmail: ", profile);
         return profile;
     }
 
@@ -46,11 +53,11 @@ export class ProfileDocumentService {
         return true;
     }
 
-    async CreateInformation(email:string, profileDto: ProfileDocumentDto) {
+    async CreateInformation(email:string, profileDto: ProfileDocumentDto):Promise<ProfileDocumentDto| object> {
 
         // check email: email is exist in Database? -> not valid
         const checkEmail = await this.accountUserService.getAccountUserByEmail(email);
-        if (!checkEmail) return "email khong hop le";
+        if (!checkEmail) return {message: "email khong hop le"};
         else{
            
 
@@ -116,20 +123,20 @@ export class ProfileDocumentService {
         }
     }
 
-    async CreateProfile(email:string, profileDetailDto: CreateProfileDetailDto) {
+    async CreateProfile(email:string, profileDetailDto: CreateProfileDetailDto): Promise<ProfileDocumentDto| object> {
         // check email
         const checkEmail = await this.profileModel.findOne({
             email: email
         })
         console.log("fix er chay",checkEmail);
-        if (!checkEmail) return "email khong hop le";
+        if (!checkEmail) return {message: "email khong hop le"};
         else{
             if (checkEmail.profileDetail == null) // check here
             {
                 const getInforId = await this.informationUserService.getInforIdByEmail(email);
                 console.log(getInforId);
                 if (getInforId==0){
-                    return "Bạn chưa cập nhật thông tin người dùng";
+                    return {message: "Bạn chưa cập nhật thông tin người dùng"};
                 }
                 else{ 
                     //new create

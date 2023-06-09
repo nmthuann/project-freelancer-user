@@ -50,21 +50,18 @@ export class AuthController  {
   
   //@Public()
   @Post('login')
-  async login(@Body() loginDto: LoginUserDto): Promise<Tokens | object> {
+  async login(@Body() loginDto: LoginUserDto): Promise<Tokens | object | any> {
     console.log(loginDto, "Đã vừa đăng nhập!")
     return await this.authService.login(loginDto);
   }
 
   @UseGuards(RoleGuard)
   @Post('logout')
-  async logout(@Body() email: string): Promise<boolean>{
-    return await this.authService.logout(email);
+  async logout(@Request() req: any){
+    const kq = await this.authService.logout(req['email']);
+    if (kq == true)
+    return {message: "Ban da dang xuat!"};
   }
-
-  // @EventPattern('auth-logout')
-  // logout(@Payload() email: string) {
-  //  return this.authService.logout(email);
-  // }
 
 
   //@UseGuards(RefreshGuard)
