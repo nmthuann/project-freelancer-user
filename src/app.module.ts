@@ -19,21 +19,21 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
-      ClientsModule.register([
-      {
-        name: 'POST_SERVICE',
-        transport: Transport.KAFKA,
-        options: {
-          client: {
-            clientId: 'post-consumer',
-            brokers: ['localhost:9092'],
-          },
-          consumer: {
-            groupId: 'post-service'
-          }
-        }
-      },
-    ]),
+    //   ClientsModule.register([
+    //   {
+    //     name: 'POST_SERVICE',
+    //     transport: Transport.KAFKA,
+    //     options: {
+    //       client: {
+    //         clientId: 'post-consumer',
+    //         brokers: ['localhost:9092'],
+    //       },
+    //       consumer: {
+    //         groupId: 'post-service'
+    //       }
+    //     }
+    //   },
+    // ]),
     TypeOrmModule.forRoot({ 
       type: 'mysql',
       host: 'localhost',

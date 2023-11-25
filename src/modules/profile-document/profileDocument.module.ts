@@ -32,7 +32,7 @@ import { ProducerService } from '../kafka/producer.service';
       InformationUserEntity, 
       ProfileUserEntity
     ]),
-    KafkaModule,
+    // KafkaModule,
   ],
   controllers: [ProfileDocumentController],
   providers: [
@@ -40,9 +40,9 @@ import { ProducerService } from '../kafka/producer.service';
     AccountUserService, 
     InformationUserService, 
     ProfileUserService,
-    AuthPostService,
-    ConsumerService,
-    ProducerService,
+    // AuthPostService,
+    // ConsumerService,
+    // ProducerService,
     AdminRoleGuard, 
     UserRoleGuard,
     RoleGuard,
