@@ -1,21 +1,16 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthenticationGuard } from './common/guards/authentication.guard';
-import { RolesGuard } from './common/guards/roles.guard';
-import { AccountUserEntity } from './modules/account-users/accountUser.entity';
-import { AccountUserModule } from './modules/account-users/accountUser.module';
-import { AuthModule } from './modules/authentication/auth.module';
-import { InformationUserEntity } from './modules/infor-users/inforUser.entity';
-import { ProfileUserEntity } from './modules/profile-users/profileUser.entity';
-import { InformationUserlModule } from './modules/infor-users/inforUser.module';
-import { ProfileUserlModule } from './modules/profile-users/profileUser.module';
+import { AccountUserEntity } from './modules/account-users/account-user.entity';
+import { AccountUserModule } from './modules/account-users/account-user.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { InformationUserEntity } from './modules/infor-users/infor-user.entity';
+import { ProfileUserEntity } from './modules/profile-users/profile-user.entity';
+import { InformationUserlModule } from './modules/infor-users/infor-user.module';
+import { ProfileUserlModule } from './modules/profile-users/profile-user.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ProfileDocumentModule } from './modules/profile-document/profileDocument.module';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-
+import { ProfileDocumentModule } from './modules/profile-document/profile-document.module';
 
 @Module({
   imports: [
@@ -34,49 +29,24 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     //     }
     //   },
     // ]),
-    TypeOrmModule.forRoot({ 
+    TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
       port: 3306, // parseInt(process.env.DB_PORT)
-      username: 'root',// process.env.DB_USERNAME
+      username: 'root', // process.env.DB_USERNAME
       password: null,
-      database: 'freelancerproject-user',//  process.env.DB_DATABASE_NAME
-      entities: [
-        AccountUserEntity, 
-        InformationUserEntity, 
-        ProfileUserEntity
-      ],
-      synchronize: false// fix: false -> migration
-    }),  
-      AuthModule, 
-      AccountUserModule, 
-      InformationUserlModule, 
-      ProfileUserlModule,
-      MongooseModule.forRoot('mongodb://127.0.0.1:27017/UserFiver'), 
-      ProfileDocumentModule,
-    ],
+      database: 'freelancerproject-user', //  process.env.DB_DATABASE_NAME
+      entities: [AccountUserEntity, InformationUserEntity, ProfileUserEntity],
+      synchronize: false, // fix: false -> migration
+    }),
+    AuthModule,
+    AccountUserModule,
+    InformationUserlModule,
+    ProfileUserlModule,
+    MongooseModule.forRoot('mongodb://127.0.0.1:27017/UserFiver'),
+    ProfileDocumentModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
-
-export default class AppModule {
-
-}
-
-
-
-
-
-
-// implements NestModule {
-  //   configure(consumer: MiddlewareConsumer) {
-  //   consumer
-  //       .apply(AuthenticationMiddleware)
-  //       .exclude(
-  //       { path: 'api/auth/login', method: RequestMethod.POST },
-  //       { path: 'api/auth/register', method: RequestMethod.POST },
-  //       //{ path: 'auth/refresh', method: RequestMethod.POST },
-  //       //'auth/(.*)',
-  //   )
-  //       .forRoutes(ApiGatewayAuthController);
-  // }
+export default class AppModule {}
